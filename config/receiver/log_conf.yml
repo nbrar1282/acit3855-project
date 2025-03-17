@@ -14,7 +14,7 @@ handlers:
     class: logging.FileHandler
     level: DEBUG
     formatter: simple
-    filename: logs/receiver/app.log
+    filename: logs/receiver.log
 
 loggers:
   basicLogger:
