@@ -1,0 +1,43 @@
+2025-02-20 22:57:25,848 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 826, 'num_traffic_flow_events': 812}
+2025-02-20 23:04:42,135 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 826, 'num_traffic_flow_events': 812}
+2025-02-20 23:04:53,855 - basicLogger - INFO - Returning air_quality event at index 3
+2025-02-20 23:05:25,467 - basicLogger - INFO - Returning air_quality event at index 232
+2025-02-20 23:06:15,513 - basicLogger - INFO - Returning traffic_flow event at index 232
+2025-02-20 23:09:56,314 - basicLogger - INFO - Returning air_quality event at index 232
+2025-02-20 23:10:03,071 - basicLogger - INFO - Returning traffic_flow event at index 232
+2025-02-20 23:19:40,343 - basicLogger - INFO - Returning traffic_flow event at index 232
+2025-02-20 23:19:41,949 - basicLogger - INFO - Returning traffic_flow event at index 232
+2025-02-20 23:27:12,501 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 836, 'num_traffic_flow_events': 821}
+2025-02-21 00:15:22,617 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 836, 'num_traffic_flow_events': 821}
+2025-02-21 00:15:27,103 - basicLogger - INFO - Returning air_quality event at index 232
+2025-02-21 00:41:24,445 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 836, 'num_traffic_flow_events': 821}
+2025-02-21 00:43:35,304 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 836, 'num_traffic_flow_events': 821}
+2025-02-21 00:44:37,721 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 836, 'num_traffic_flow_events': 821}
+2025-02-21 00:44:41,731 - basicLogger - INFO - Returning air_quality event at index 232
+2025-02-21 00:44:50,716 - basicLogger - INFO - Returning air_quality event at index 122
+2025-02-21 00:45:09,546 - basicLogger - INFO - Returning traffic_flow event at index 411
+2025-02-21 00:45:19,012 - basicLogger - INFO - Returning traffic_flow event at index 611
+2025-02-21 01:14:54,015 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 846, 'num_traffic_flow_events': 831}
+2025-02-21 01:15:25,756 - basicLogger - INFO - Returning air_quality event at index 845
+2025-02-21 01:15:31,682 - basicLogger - INFO - Returning air_quality event at index 0
+2025-02-21 01:15:48,283 - basicLogger - INFO - Returning air_quality event at index 832
+2025-03-06 21:00:50,385 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 0, 'num_traffic_flow_events': 0}
+2025-03-06 21:02:12,893 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 10, 'num_traffic_flow_events': 10}
+2025-03-06 21:02:41,631 - basicLogger - INFO - Returning air_quality event at index 9
+2025-03-06 21:02:54,387 - basicLogger - INFO - Returning traffic_flow event at index 9
+2025-03-06 21:07:30,958 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 10, 'num_traffic_flow_events': 10}
+2025-03-06 21:07:33,448 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 10, 'num_traffic_flow_events': 10}
+2025-03-06 21:09:45,540 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 10, 'num_traffic_flow_events': 10}
+2025-03-06 21:11:54,955 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 10, 'num_traffic_flow_events': 10}
+2025-03-06 21:11:57,794 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 10, 'num_traffic_flow_events': 10}
+2025-03-06 21:12:38,533 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 20, 'num_traffic_flow_events': 20}
+2025-03-06 21:12:41,231 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 20, 'num_traffic_flow_events': 20}
+2025-03-06 21:12:46,564 - basicLogger - INFO - Returning traffic_flow event at index 9
+2025-03-06 21:15:41,482 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 30, 'num_traffic_flow_events': 30}
+2025-03-06 21:18:35,288 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 30, 'num_traffic_flow_events': 30}
+2025-03-06 21:18:52,420 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 30, 'num_traffic_flow_events': 30}
+2025-03-06 21:19:03,323 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 40, 'num_traffic_flow_events': 40}
+2025-03-06 22:43:23,160 - basicLogger - INFO - Returning event stats: {'num_air_quality_events': 40, 'num_traffic_flow_events': 40}
+2025-03-06 22:43:39,268 - basicLogger - INFO - Returning traffic_flow event at index 39
+2025-03-06 22:43:59,743 - basicLogger - INFO - Returning air_quality event at index 39
+2025-03-06 22:44:35,219 - basicLogger - INFO - Returning air_quality event at index 49

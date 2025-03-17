@@ -1,0 +1,59 @@
+openapi: 3.0.0
+info:
+  title: Processing Service API
+  version: "1.0.0"
+  description: API to provide event statistics.
+  contact:
+    email: nbrar3@bcit.ca
+
+paths:
+  /stats:
+    get:
+      summary: Get event statistics
+      operationId: app.get_stats
+      description: Retrieves statistics for air quality and traffic flow events.
+      responses:
+        '200':
+          description: Successfully retrieved event statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventStats'
+        '404':
+          description: Statistics not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Statistics do not exist"
+
+components:
+  schemas:
+    EventStats:
+      type: object
+      required:
+        - num_air_quality_events
+        - max_air_quality_index
+        - num_traffic_flow_events
+        - max_vehicle_count
+        - last_updated
+      properties:
+        num_air_quality_events:
+          type: integer
+          example: 1500
+        max_air_quality_index:
+          type: integer
+          example: 250
+        num_traffic_flow_events:
+          type: integer
+          example: 1300
+        max_vehicle_count:
+          type: integer
+          example: 180
+        last_updated:
+          type: string
+          format: date-time
+          example: "2025-01-09T15:30:00Z"

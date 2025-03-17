@@ -1,0 +1,58 @@
+openapi: 3.0.0
+info:
+  title: Event Analyzer API
+  version: "1.0.0"
+  contact:
+    email: nbrar1282@gmail.com
+  description: API to inspect Kafka event queue and generate event statistics.
+
+paths:
+  /air:
+    get:
+      summary: Get an air quality event from Kafka history
+      operationId: app.get_air_quality_event
+      description: Retrieves an air quality event at the specified index from the Kafka queue.
+      parameters:
+        - name: index
+          in: query
+          description: Index of the air quality event in the Kafka queue
+          required: true
+          schema:
+            type: integer
+            example: 3
+      responses:
+        '200':
+          description: Successfully retrieved an air quality event
+        '400':
+          description: Invalid request
+        '404':
+          description: Event not found
+  /traffic:
+    get:
+      summary: Get a traffic flow event from Kafka history
+      operationId: app.get_traffic_flow_event
+      description: Retrieves a traffic flow event at the specified index from the Kafka queue.
+      parameters:
+        - name: index
+          in: query
+          description: Index of the traffic flow event in the Kafka queue
+          required: true
+          schema:
+            type: integer
+            example: 2
+      responses:
+        '200':
+          description: Successfully retrieved a traffic flow event
+        '400':
+          description: Invalid request
+        '404':
+          description: Event not found
+
+  /stats:
+    get:
+      summary: Get event statistics
+      operationId: app.get_event_stats
+      description: Retrieves statistics about the number of air quality and traffic flow events in the Kafka queue.
+      responses:
+        '200':
+          description: Successfully returned event statistics

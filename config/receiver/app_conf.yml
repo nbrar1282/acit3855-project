@@ -1,0 +1,9 @@
+version: 1
+events:
+  hostname: kafka
+  port: 9092
+  topic: events
+  air:
+    url: http://storage:8090/city/airquality
+  traffic:
+    url: http://storage:8090/city/trafficflow

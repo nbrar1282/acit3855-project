@@ -1,0 +1,7 @@
+version: 1
+storage:
+  url: "{{ storage_url }}"  
+scheduler:
+  interval: "{{ scheduler_interval }}"  
+stats:
+  filename: "{{ stats_file }}" 

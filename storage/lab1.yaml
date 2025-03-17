@@ -1,0 +1,166 @@
+openapi: 3.0.0
+info:
+  title: Smart City Monitoring API
+  version: 1.0.0
+  contact:
+    email: nbrar3@bcit.ca
+  description: API to receive air quality and traffic flow data from IoT sensors in a smart city.
+
+paths:
+  /city/airquality:
+    get:
+      tags:
+        - Air Quality
+      summary: Get air quality events
+      operationId: app.get_air_quality_events
+      description: Retrieve air quality events within a specified date-time range.
+      parameters:
+        - name: start_timestamp
+          in: query
+          description: Start date-time for filtering events
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-01-01T00:00:00Z"
+        - name: end_timestamp
+          in: query
+          description: End date-time for filtering events
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-02-01T00:00:00Z"
+      responses:
+        '200':
+          description: Successfully retrieved air quality events
+        '400':
+          description: Invalid input
+
+    # post:
+    #   summary: Receive air quality event
+    #   description: Logs air quality data from an environmental sensor.
+    #   requestBody:
+    #     description: Air quality event data
+    #     required: true
+    #     content:
+    #       application/json:
+    #         schema:
+    #           $ref: '#/components/schemas/AirQualityEvent'
+    #   responses:
+    #     '201':
+    #       description: Air quality event logged successfully
+    #     '400':
+    #       description: Invalid input
+
+  /city/trafficflow:
+    get:
+      tags:
+        - Traffic Flow
+      summary: Get traffic flow events
+      operationId: app.get_traffic_flow_events
+      description: Retrieve traffic flow events within a specified date-time range.
+      parameters:
+        - name: start_timestamp
+          in: query
+          description: Start date-time for filtering events
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-01-01T00:00:00Z"
+        - name: end_timestamp
+          in: query
+          description: End date-time for filtering events
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: "2024-02-01T00:00:00Z"
+      responses:
+        '200':
+          description: Successfully retrieved traffic flow events
+        '400':
+          description: Invalid input
+
+    # post:
+    #   summary: Receive traffic flow event
+    #   description: Logs traffic flow data from a road sensing device.
+    #   requestBody:
+    #     description: Traffic flow event data
+    #     required: true
+    #     content:
+    #       application/json:
+    #         schema:
+    #           $ref: '#/components/schemas/TrafficFlowEvent'
+    #   responses:
+    #     '201':
+    #       description: Traffic flow event logged successfully
+    #     '400':
+    #       description: Invalid input
+
+# components:
+#   schemas:
+#     AirQualityEvent:
+#       type: object
+#       required:
+#         - sensor_id
+#         - air_quality_index
+#         - recorded_at
+#         - zone_id
+#         - trace_id
+#       properties:
+#         trace_id:
+#           type: string
+#           format: uuid
+#           description: Unique trace ID for event tracking
+#         sensor_id:
+#           type: string
+#           description: Unique ID of the air quality sensor
+#           format: uuid
+#           example: 56b77ea2-3f76-4e39-bb61-4f5c4d123abc
+#         air_quality_index:
+#           type: number
+#           description: Air Quality Index (AQI) value
+#           example: 42
+#         recorded_at:
+#           type: string
+#           format: date-time
+#           description: Timestamp when the air quality was recorded
+#           example: '2025-01-09T15:30:00Z'
+#         zone_id:
+#           type: string
+#           description: ID of the city zone where the sensor is located
+#           example: Zone-12
+
+#     TrafficFlowEvent:
+#       type: object
+#       required:
+#         - road_id
+#         - vehicle_count
+#         - time_registered
+#         - average_speed(in km/h)
+#         - trace_id
+#       properties:
+#         trace_id:
+#           type: string
+#           format: uuid
+#           description: Unique trace ID for event tracking
+#         road_id:
+#           type: string
+#           description: Unique ID of the traffic flow sensor
+#           format: uuid
+#           example: a9d45e8f-1a2b-4d3e-9f3c-2c9b6789d456
+#         vehicle_count:
+#           type: integer
+#           description: Number of vehicles detected during the time interval
+#           example: 128
+#         time_registered:
+#           type: string
+#           format: date-time
+#           description: Timestamp when the vehicle count was recorded
+#           example: '2025-01-09T16:45:00Z'
+#         average_speed(in km/h):
+#           type: integer
+#           description: Average speed of vehicles on the road (in km/h)
+#           example: 56

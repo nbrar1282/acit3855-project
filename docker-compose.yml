@@ -1,0 +1,134 @@
+version: "3.8"
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    networks:
+      - app-network
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    command: >
+      sh -c "rm -rf /kafka/kafka-logs/meta.properties &&  start-kafka.sh"
+    # ports: deleting the meta.properties in log folder.
+    #   - "9092:9092"
+    environment:
+      KAFKA_CREATE_TOPICS: "events:1:1" # topic:partition:replicas
+      KAFKA_ADVERTISED_HOST_NAME: kafka # docker-machine ip
+      KAFKA_LISTENERS: INSIDE://:29092,OUTSIDE://:9092
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:29092,OUTSIDE://kafka:9092 #This was the change from last week as other services like receiver are using kafka as a hostname now instead of localhost.
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LOG_DIRS: /kafka/kafka-logs #for defining a log dir; so no new directory is created.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/kafka:/kafka/kafka-logs  # Fix the path to store logs persistently
+    depends_on:
+      - "zookeeper"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9092"]
+      interval: 5s
+      retries: 50
+      start_period: 1s
+      timeout: 1s
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql
+    container_name: mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_USER: nav
+      MYSQL_PASSWORD: sran1234
+      MYSQL_DATABASE: api_class
+    # ports:
+    #   - 3306:3306
+    volumes:
+      - ./data/database:/var/lib/mysql  # Using bind mount for easier debugging
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysql", "-u", "nav", "-psran1234", "-e", "SHOW DATABASES;"]
+      interval: 5s
+      retries: 50
+      start_period: 1s
+      timeout: 1s
+
+  receiver:
+    build:
+      context: ./receiver
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config/receiver:/app/config
+      - ./logs:/app/logs
+    depends_on:
+      - kafka
+    networks:
+      - app-network
+    restart: always
+
+  storage:
+    build:
+      context: ./storage
+      dockerfile: Dockerfile
+    # ports:
+    #   - "8090:8090"
+    volumes:
+      - ./config/storage:/app/config
+      - ./logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql 
+    networks:
+      - app-network
+    restart: always
+
+  processing:
+    build:
+      context: ./processing
+      dockerfile: Dockerfile
+    ports:
+      - "8100:8100"
+    volumes:
+      - ./config/processing:/app/config
+      - ./logs:/app/logs
+      - ./data/processing:/app/data
+    depends_on:
+      - storage
+    networks:
+      - app-network
+    restart: always
+
+  analyzer:
+    build:
+      context: ./analyzer
+      dockerfile: Dockerfile
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./config/analyzer:/app/config
+      - ./logs:/app/logs
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: always
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  zookeeper-data:  # Named volume for ZooKeeper data

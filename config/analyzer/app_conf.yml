@@ -1,0 +1,9 @@
+version: 1
+events:
+  hostname: "{{ kafka_hostname }}" 
+  port: "{{ kafka_port }}"  
+  topic: "{{ kafka_topic }}"  
+  air:
+    url: "{{ storage_url }}/city/airquality"
+  traffic:
+    url: "{{ storage_url }}/city/trafficflow"

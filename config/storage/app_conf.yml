@@ -1,0 +1,11 @@
+version: 1
+events:
+  hostname: kafka
+  port: 9092
+  topic: events
+datastore:
+  user: nav
+  password: sran1234
+  hostname: mysql
+  port: 3306
+  db: api_class

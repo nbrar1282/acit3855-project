@@ -1,0 +1,5 @@
+logs/
+data/
+ansible/
+config/*/app_conf_test.yml
+__pycache__/
