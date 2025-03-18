@@ -23,5 +23,8 @@ USER nobody
 # Expose the service port
 EXPOSE 8090
 
+RUN chmod -R 777 /app/logs
+
+
 # Entrypoint and command to start the service
 ENTRYPOINT ["sh", "-c", "sleep 1 && python3 app.py"]
