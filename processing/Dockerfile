@@ -23,8 +23,6 @@ USER nobody
 # Expose the service port
 EXPOSE 8100
 
-RUN chmod -R 777 /app/logs
-RUN chmod -R 777 /app/data/processing
 # Entrypoint and command to start the service
 ENTRYPOINT ["python3"]
 CMD ["app.py"]
