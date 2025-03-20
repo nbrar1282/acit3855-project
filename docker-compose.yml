@@ -131,7 +131,7 @@ services:
       context: ./dashboard
       dockerfile: Dockerfile
     ports:
-      - "8081:80"
+      - "80:80"
     networks:
       - app-network
     depends_on:
