@@ -6,6 +6,8 @@ import time
 from pykafka import KafkaClient
 from flask import jsonify
 from connexion import NoContent
+from connexion.middleware import MiddlewarePosition
+from starlette.middleware.cors import CORSMiddleware
 
 # Configure logging to use UTC timestamps
 logging.Formatter.converter = time.gmtime
@@ -129,6 +131,14 @@ def get_event_stats():
 # Create Flask app with Connexion
 app = connexion.FlaskApp(__name__, specification_dir="")
 app.add_api("analyzer.yml", strict_validation=True, validate_responses=True)
+app.add_middleware(
+    CORSMiddleware,
+    position=MiddlewarePosition.BEFORE_EXCEPTION,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 if __name__ == "__main__":
     app.run(port=8200, host="0.0.0.0")
