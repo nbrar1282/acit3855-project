@@ -125,10 +125,22 @@ services:
     networks:
       - app-network
     restart: always
+  
+  dashboard:
+  build:
+    context: ./dashboard
+    dockerfile: Dockerfile
+  ports:
+    - "8081:80"
+  networks:
+    - app-network
+  depends_on:
+      - storage
 
 networks:
   app-network:
     driver: bridge
+
 
 volumes:
   zookeeper-data:  # Named volume for ZooKeeper data
