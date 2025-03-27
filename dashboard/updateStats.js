@@ -21,7 +21,7 @@ const makeReq = (url, cb) => {
 
 const updateCodeDiv = (result, elemId) => document.getElementById(elemId).innerText = JSON.stringify(result)
 
-const getLocaleDateStr = () => (new Date()).toLocaleString()
+const getLocaleDateStr = () => (new Date()).toUTCString()
 
 const getStats = () => {
     document.getElementById("last-updated-value").innerText = getLocaleDateStr()
