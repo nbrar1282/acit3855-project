@@ -129,7 +129,7 @@ def get_stats():
 
 # Create the Flask app using Connexion
 app = connexion.FlaskApp(__name__, specification_dir='')
-app.add_api("processing.yaml", strict_validation=True, validate_responses=True)
+app.add_api("processing.yaml", base_path="/processing", strict_validation=True, validate_responses=True)
 app.add_middleware(
     CORSMiddleware,
     position=MiddlewarePosition.BEFORE_EXCEPTION,

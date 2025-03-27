@@ -134,8 +134,14 @@ services:
       - "80:80"
     networks:
       - app-network
+    volumes:
+      - ./dashboard/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-        - storage
+      - receiver
+      - analyzer
+      - processing
+      - storage
+
 
 networks:
   app-network:

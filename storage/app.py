@@ -188,7 +188,7 @@ def setup_kafka_thread():
 # Create the application instance
 app = connexion.FlaskApp(__name__, specification_dir='')
 
-app.add_api("lab1.yaml", strict_validation=True, validate_responses=True)
+app.add_api("lab1.yaml", base_path="/storage", strict_validation=True, validate_responses=True)
 
 if __name__ == "__main__":
     setup_kafka_thread()

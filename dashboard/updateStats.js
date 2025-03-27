@@ -1,10 +1,10 @@
 /* UPDATE THESE VALUES TO MATCH YOUR SETUP */
 
-const PROCESSING_STATS_API_URL = "http://acit3855-navdeep.westus.cloudapp.azure.com:8100/stats"
+const PROCESSING_STATS_API_URL = "/processing/stats"
 const ANALYZER_API_URL = {
-    stats: "http://acit3855-navdeep.westus.cloudapp.azure.com:8200/stats",
-    snow: "http://acit3855-navdeep.westus.cloudapp.azure.com:8200/air?index=0",
-    lift: "http://acit3855-navdeep.westus.cloudapp.azure.com:8200/traffic?index=0"
+    stats: "/analyzer/stats",
+    snow: "/analyzer/air?index=0",
+    lift: "/analyzer/traffic?index=0"
 }
 
 // This function fetches and updates the general statistics

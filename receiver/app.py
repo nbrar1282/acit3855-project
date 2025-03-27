@@ -91,7 +91,7 @@ def log_traffic_flow_event(body):
 
 
 app = connexion.FlaskApp(__name__, specification_dir='')
-app.add_api("lab1.yaml", strict_validation=True)
+app.add_api("lab1.yaml", base_path="/receiver", strict_validation=True)
 
 if __name__ == "__main__":
     app.run(port=8080, host="0.0.0.0")

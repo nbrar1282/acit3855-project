@@ -130,7 +130,7 @@ def get_event_stats():
 
 # Create Flask app with Connexion
 app = connexion.FlaskApp(__name__, specification_dir="")
-app.add_api("analyzer.yml", strict_validation=True, validate_responses=True)
+app.add_api("analyzer.yml", base_path="/analyzer",  strict_validation=True, validate_responses=True)
 app.add_middleware(
     CORSMiddleware,
     position=MiddlewarePosition.BEFORE_EXCEPTION,
