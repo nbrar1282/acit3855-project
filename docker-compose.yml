@@ -61,7 +61,7 @@ services:
 
   receiver:
     build:
-      context: ./receiver
+      context: nbrar1282/receiver:latest #./receiver
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -76,7 +76,7 @@ services:
 
   storage:
     build:
-      context: ./storage
+      context: nbrar1282/storage:latest #./storage
       dockerfile: Dockerfile
     # ports:
     #   - "8090:8090"
@@ -96,7 +96,7 @@ services:
 
   processing:
     build:
-      context: ./processing
+      context: nbrar1282/processing:latest #./processing
       dockerfile: Dockerfile
     ports:
       - "8100:8100"
@@ -112,7 +112,7 @@ services:
 
   analyzer:
     build:
-      context: ./analyzer
+      context: nbrar1282/analyzer:latest #./analyzer
       dockerfile: Dockerfile
     ports:
       - "8200:8200"
