@@ -1,0 +1,8 @@
+@Library('cicd-shared-lib') _
+
+cicdPipeline(
+    serviceDir: 'storage',
+    imageName: 'nbrar1282/storage',
+    tag: 'latest',
+    serviceName: 'storage'
+)

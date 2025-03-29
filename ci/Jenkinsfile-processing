@@ -1,0 +1,8 @@
+@Library('cicd-shared-lib') _
+
+cicdPipeline(
+    serviceDir: 'processing',
+    imageName: 'nbrar1282/processing',
+    tag: 'latest',
+    serviceName: 'processing'
+)

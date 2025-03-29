@@ -1,0 +1,8 @@
+@Library('cicd-shared-lib') _
+
+cicdPipeline(
+    serviceDir: 'receiver',
+    imageName: 'nbrar1282/receiver',
+    tag: 'latest',
+    serviceName: 'receiver'
+)

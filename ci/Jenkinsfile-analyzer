@@ -1,0 +1,8 @@
+@Library('cicd-shared-lib') _
+
+cicdPipeline(
+    serviceDir: 'analyzer',
+    imageName: 'nbrar1282/analyzer',
+    tag: 'latest',
+    serviceName: 'analyzer'
+)
