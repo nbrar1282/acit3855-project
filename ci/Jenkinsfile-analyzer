@@ -1,4 +1,4 @@
-@Library('cicd-shared-lib') _
+@Library('jenkins-shared-library') _
 
 cicdPipeline(
     serviceDir: 'analyzer',
