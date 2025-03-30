@@ -1,5 +1,4 @@
-flask
-connexion
+connexion[flask]
 pyyaml
 httpx
 pykafka

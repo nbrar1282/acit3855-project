@@ -83,7 +83,7 @@ paths:
         '400':
           description: Invalid input
     
-    /counts:
+  /counts:
       get:
         summary: Get count of events in database
         operationId: app.get_event_counts
@@ -93,7 +93,7 @@ paths:
           '500':
             description: Internal server error
 
-    /ids/air:
+  /ids/air:
       get:
         summary: Get IDs for air events
         operationId: app.get_air_ids
@@ -101,7 +101,7 @@ paths:
           '200':
             description: List of air event IDs
 
-    /ids/traffic:
+  /ids/traffic:
       get:
         summary: Get IDs for traffic events
         operationId: app.get_traffic_ids
