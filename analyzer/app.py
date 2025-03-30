@@ -1,4 +1,4 @@
-"""Analyzer Service — Reads and analyzes Kafka events for insights."""
+"""Analyzer Service — Reads Kafka events and exposes APIs for event inspection and stats."""
 
 import json
 import logging
@@ -12,7 +12,7 @@ from pykafka import KafkaClient
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
 
-# Configure logging to use UTC timestamps
+# Use UTC timestamps for logging
 logging.Formatter.converter = time.gmtime
 
 # Load logging configuration
@@ -26,20 +26,18 @@ logger = logging.getLogger("basicLogger")
 with open("./config/app_conf.yml", "r", encoding="utf-8") as config_file:
     app_config = yaml.safe_load(config_file.read())
 
-# Kafka connection details
+# Kafka setup
 KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
 TOPIC_NAME = app_config['events']['topic']
-
-# Connect to Kafka
 client = KafkaClient(hosts=KAFKA_HOST)
 topic = client.topics[str.encode(TOPIC_NAME)]
 
 
 def get_event_by_index(event_type, index):
-    """Retrieves an event of a specific type at the given index from Kafka."""
+    """Retrieve a specific event by index for a given event type."""
     consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
-
     counter = 0
+
     for msg in consumer:
         if msg is None:
             break
@@ -52,23 +50,23 @@ def get_event_by_index(event_type, index):
                 return data["payload"], 200
             counter += 1
 
+    logger.warning("No %s event found at index %d", event_type, index)
     return {"message": f"No {event_type} event found at index {index}"}, 404
 
 
 def get_air_quality_event(index):
-    """Retrieves an air quality event from Kafka by index."""
+    """Handle request to get an air quality event by index."""
     return get_event_by_index("air_quality", index)
 
 
 def get_traffic_flow_event(index):
-    """Retrieves a traffic flow event from Kafka by index."""
+    """Handle request to get a traffic flow event by index."""
     return get_event_by_index("traffic_flow", index)
 
 
 def get_event_stats():
-    """Retrieves the number of air quality and traffic flow events in Kafka."""
+    """Return count of air quality and traffic flow events currently in Kafka."""
     consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
-
     air_quality_count = 0
     traffic_flow_count = 0
 
@@ -92,10 +90,9 @@ def get_event_stats():
     return jsonify(stats), 200
 
 
-# Create Flask app with Connexion
+# Setup Flask app using Connexion
 app = connexion.FlaskApp(__name__, specification_dir="")
 app.add_api("analyzer.yml", base_path="/analyzer", strict_validation=True, validate_responses=True)
-
 app.add_middleware(
     CORSMiddleware,
     position=MiddlewarePosition.BEFORE_EXCEPTION,
