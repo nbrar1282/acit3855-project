@@ -2,8 +2,7 @@ import time
 import json
 import os
 from datetime import datetime
-import requests
-from flask import Flask, request, jsonify
+import httpx
 import connexion
 
 app = connexion.FlaskApp(__name__, specification_dir="./")
@@ -16,15 +15,15 @@ DATA_FILE = APP_CONF["datastore"]["filepath"]
 def run_consistency_checks():
     start_time = time.time()
 
-    processing_stats = requests.get(f'{APP_CONF["processing"]["url"]}/stats').json()
-    analyzer_stats = requests.get(f'{APP_CONF["analyzer"]["url"]}/stats').json()
-    storage_counts = requests.get(f'{APP_CONF["storage"]["url"]}/counts').json()
+    processing_stats = httpx.get(f'{APP_CONF["processing"]["url"]}/stats').json()
+    analyzer_stats = httpx.get(f'{APP_CONF["analyzer"]["url"]}/stats').json()
+    storage_counts = httpx.get(f'{APP_CONF["storage"]["url"]}/counts').json()
 
-    analyzer_air_ids = requests.get(f'{APP_CONF["analyzer"]["url"]}/ids/air').json()
-    analyzer_traffic_ids = requests.get(f'{APP_CONF["analyzer"]["url"]}/ids/traffic').json()
+    analyzer_air_ids = httpx.get(f'{APP_CONF["analyzer"]["url"]}/ids/air').json()
+    analyzer_traffic_ids = httpx.get(f'{APP_CONF["analyzer"]["url"]}/ids/traffic').json()
 
-    storage_air_ids = requests.get(f'{APP_CONF["storage"]["url"]}/ids/air').json()
-    storage_traffic_ids = requests.get(f'{APP_CONF["storage"]["url"]}/ids/traffic').json()
+    storage_air_ids = httpx.get(f'{APP_CONF["storage"]["url"]}/ids/air').json()
+    storage_traffic_ids = httpx.get(f'{APP_CONF["storage"]["url"]}/ids/traffic').json()
 
     analyzer_ids = analyzer_air_ids + analyzer_traffic_ids
     storage_ids = storage_air_ids + storage_traffic_ids

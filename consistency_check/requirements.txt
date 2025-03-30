@@ -1,4 +1,4 @@
 connexion[flask,uvicorn,swagger-ui]
-requests
+httpx
 pykafka
 setuptools
