@@ -52,7 +52,7 @@ def log_air_quality_event(body):
     body = add_trace_id(body)  # Ensure trace_id is set
     body["event_type"] = "air_quality"
 
-    logger.info(f"Received air_quality event with trace_id {body['trace_id']}")  # Log received event
+    logger.info(f"Received air_quality event with trace_id {body['trace_id']}")  # Log received event t
 
     try:
         msg = {
