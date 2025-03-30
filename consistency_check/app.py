@@ -8,7 +8,7 @@ import connexion
 app = connexion.FlaskApp(__name__, specification_dir="./")
 app.add_api("openapi.yml", base_path="/consistency_check")
 
-APP_CONF = json.load(open("config/consistency_check/app_conf.yml"))
+APP_CONF = json.load(open("config/app_conf.yml"))
 
 DATA_FILE = APP_CONF["datastore"]["filepath"]
 
