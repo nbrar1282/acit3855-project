@@ -62,10 +62,10 @@ services:
   receiver:
     deploy:
       replicas: 3
-    build:
-      #context: ./receiver
-      context: nbrar1282/receiver:latest
-      dockerfile: Dockerfile
+    image: nbrar1282/receiver:latest
+    # build:
+    #   context: ./receiver
+    #   dockerfile: Dockerfile
     volumes:
       - ./config/receiver:/app/config
       - ./logs:/app/logs
@@ -76,15 +76,15 @@ services:
     restart: always
 
   storage:
-    build:
-      #context: ./storage
-      context: nbrar1282/storage:latest
-      dockerfile: Dockerfile
-    # ports:
-    #   - "8090:8090"
+    image: nbrar1282/storage:latest
+    # build:
+    #   context: ./storage
+    #   dockerfile: Dockerfile
     volumes:
       - ./config/storage:/app/config
       - ./logs:/app/logs
+    # ports:
+    #   - "8090:8090"
     depends_on:
       mysql:
         condition: service_healthy
@@ -97,10 +97,10 @@ services:
     restart: always
 
   processing:
-    build:
-      #context: ./processing
-      context: nbrar1282/processing:latest 
-      dockerfile: Dockerfile
+    image: nbrar1282/processing:latest
+    # build:
+    #   context: ./processing 
+    #   dockerfile: Dockerfile
     environment:
       CORS_ALLOW_ALL: "no"
     ports:
@@ -116,10 +116,10 @@ services:
     restart: always
 
   analyzer:
-    build:
-      #context: ./analyzer
-      context: nbrar1282/analyzer:latest 
-      dockerfile: Dockerfile
+    image: nbrar1282/analyzer:latest 
+    # build:
+    #   context: ./analyzer
+    #   dockerfile: Dockerfile
     environment:
       CORS_ALLOW_ALL: "no"
     ports:
