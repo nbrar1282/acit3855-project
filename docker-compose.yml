@@ -150,6 +150,21 @@ services:
       - processing
       - storage
 
+    consistency_check:
+      build:
+        context: ./consistency_check
+      volumes:
+        - ./config/consistency_check:/app/config
+        - ./logs:/app/logs
+        - ./data/consistency_check:/app/data
+      depends_on:
+        - analyzer
+        - storage
+        - processing
+      networks:
+        - app-network
+      restart: always
+
 
 networks:
   app-network:

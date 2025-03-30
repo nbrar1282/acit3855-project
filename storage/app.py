@@ -161,6 +161,47 @@ def process_messages():
     except Exception as error:
         logger.critical("Critical Kafka error: %s", str(error), exc_info=True)
 
+def get_event_counts():
+    """Return count of air and traffic events in the database."""
+    session = SessionLocal()
+    try:
+        air_count = session.query(AirQualityEvent).count()
+        traffic_count = session.query(TrafficFlowEvent).count()
+        return {"air": air_count, "traffic": traffic_count}, 200
+    except Exception as e:
+        logger.error("Error getting event counts: %s", str(e))
+        return {"message": "Internal server error"}, 500
+    finally:
+        session.close()
+
+
+def get_air_ids():
+    """Return all air_quality event IDs and trace IDs."""
+    session = SessionLocal()
+    try:
+        results = session.query(AirQualityEvent.id, AirQualityEvent.trace_id).all()
+        events = [{"id": r[0], "trace_id": r[1]} for r in results]
+        return events, 200
+    except Exception as e:
+        logger.error("Error getting air IDs: %s", str(e))
+        return {"message": "Internal server error"}, 500
+    finally:
+        session.close()
+
+
+def get_traffic_ids():
+    """Return all traffic_flow event IDs and trace IDs."""
+    session = SessionLocal()
+    try:
+        results = session.query(TrafficFlowEvent.id, TrafficFlowEvent.trace_id).all()
+        events = [{"id": r[0], "trace_id": r[1]} for r in results]
+        return events, 200
+    except Exception as e:
+        logger.error("Error getting traffic IDs: %s", str(e))
+        return {"message": "Internal server error"}, 500
+    finally:
+        session.close()
+
 
 def setup_kafka_thread():
     """Set up a background thread to process Kafka messages."""

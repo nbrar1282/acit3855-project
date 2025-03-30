@@ -1,0 +1,8 @@
+processing:
+  url: ht
+analyzer:
+  url: ht
+storage:
+  url: ht
+datastore:
+  filepath: ht

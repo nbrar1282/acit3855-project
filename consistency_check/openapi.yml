@@ -1,0 +1,101 @@
+openapi: 3.0.0
+info:
+  description: This API provides consistency checks between the database and the Kafka queue
+  version: "1.0.0"
+  title: Consistency API
+  contact:
+    email: nbrar@bcit.ca
+
+paths:
+  /update:
+    post:
+      summary: Endpoint to run the checks
+      operationId: app.run_consistency_checks
+      description: Runs the consistency checks and updates the JSON datastore
+      responses:
+        '200':
+          description: Successfully ran the checks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  processing_time_ms:
+                    type: integer
+  /checks:
+    get:
+      summary: Displays the results of the checks
+      operationId: app.get_checks
+      description: Gets the results of the consistency checks from JSON and returns them
+      responses:
+        '200':
+          description: Successfully returned the results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checks'
+        '404':
+          description: No checks have been run
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+components:
+  schemas:
+    Checks:
+      required:
+      - counts
+      - not_in_db
+      - not_in_queue
+      - last_updated
+      type: object
+      properties:
+        last_updated:
+          type: string
+          format: date-time
+        counts:
+          type: object
+          properties:
+            db:
+              type: object
+              properties:
+                event1:
+                  type: integer
+                event2:
+                  type: integer
+            queue:
+              type: object
+              properties:
+                event1:
+                  type: integer
+                event2:
+                  type: integer
+            processing:
+              type: object
+              properties:
+                event1:
+                  type: integer
+                event2:
+                  type: integer
+        not_in_db:
+          type: array
+          items:
+            type: object
+            properties:
+              event_id:
+                type: integer
+              trace_id:
+                type: integer
+        not_in_queue:
+          type: array
+          items:
+            type: object
+            properties:
+              event_id:
+                type: integer
+              trace_id:
+                type: integer

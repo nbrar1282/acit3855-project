@@ -6,6 +6,8 @@ const ANALYZER_API_URL = {
     snow: "/analyzer/air?index=0",
     lift: "/analyzer/traffic?index=0"
 }
+const CONSISTENCY_UPDATE_URL = "/consistency_check/update";
+const CONSISTENCY_CHECKS_URL = "/consistency_check/checks";
 
 // This function fetches and updates the general statistics
 const makeReq = (url, cb) => {
@@ -52,3 +54,31 @@ const setup = () => {
 }
 
 document.addEventListener('DOMContentLoaded', setup)
+
+function runConsistencyCheck() {
+    const start = performance.now();
+
+    fetch(CONSISTENCY_UPDATE_URL, {
+        method: "POST"
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error(`HTTP error ${res.status}`);
+        }
+        return res.json();
+    })
+    .then(data => {
+        console.log("Consistency update triggered:", data);
+        fetch(CONSISTENCY_CHECKS_URL)
+            .then(res => {
+                if (!res.ok) throw new Error("No check results available yet.");
+                return res.json();
+            })
+            .then(result => {
+                document.getElementById("consistency-results").innerText = JSON.stringify(result, null, 2);
+            })
+    })
+    .catch(err => {
+        updateErrorMessages(err.message);
+    });
+}

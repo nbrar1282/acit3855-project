@@ -82,6 +82,32 @@ paths:
           description: Successfully retrieved traffic flow events
         '400':
           description: Invalid input
+    
+    /counts:
+      get:
+        summary: Get count of events in database
+        operationId: app.get_event_counts
+        responses:
+          '200':
+            description: Event counts
+          '500':
+            description: Internal server error
+
+    /ids/air:
+      get:
+        summary: Get IDs for air events
+        operationId: app.get_air_ids
+        responses:
+          '200':
+            description: List of air event IDs
+
+    /ids/traffic:
+      get:
+        summary: Get IDs for traffic events
+        operationId: app.get_traffic_ids
+        responses:
+          '200':
+            description: List of traffic event IDs
 
     # post:
     #   summary: Receive traffic flow event

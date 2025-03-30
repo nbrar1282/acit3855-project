@@ -107,6 +107,56 @@ def get_event_stats() -> Tuple[Any, int]:
     logger.info("Returning event stats: %s", stats)
     return jsonify(stats), 200
 
+def get_all_air_ids():
+    """Get all air quality event_id and trace_id from Kafka."""
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True,
+        consumer_timeout_ms=KAFKA_TIMEOUT_MS
+    )
+
+    results = []
+    for msg in consumer:
+        if msg is None:
+            break
+        try:
+            data = json.loads(msg.value.decode("utf-8"))
+            if data.get("type") == "air_quality":
+                payload = data["payload"]
+                results.append({
+                    "event_id": payload.get("id"),  
+                    "trace_id": payload.get("trace_id")
+                })
+        except Exception as e:
+            logger.warning("Skipping message: %s", str(e))
+            continue
+
+    return results, 200
+
+
+def get_all_traffic_ids():
+    """Get all traffic flow event_id and trace_id from Kafka."""
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True,
+        consumer_timeout_ms=KAFKA_TIMEOUT_MS
+    )
+
+    results = []
+    for msg in consumer:
+        if msg is None:
+            break
+        try:
+            data = json.loads(msg.value.decode("utf-8"))
+            if data.get("type") == "traffic_flow":
+                payload = data["payload"]
+                results.append({
+                    "event_id": payload.get("id"),  
+                    "trace_id": payload.get("trace_id")
+                })
+        except Exception as e:
+            logger.warning("Skipping message: %s", str(e))
+            continue
+
+    return results, 200
 
 # Setup Connexion app
 app = connexion.FlaskApp(__name__, specification_dir="")

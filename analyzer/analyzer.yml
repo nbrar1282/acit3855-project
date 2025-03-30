@@ -56,3 +56,22 @@ paths:
       responses:
         '200':
           description: Successfully returned event statistics
+
+  /ids/air:
+    get:
+      summary: Get all air event IDs and trace IDs
+      operationId: app.get_all_air_ids
+      description: Return all air quality event_id and trace_id values from Kafka
+      responses:
+        '200':
+          description: Successfully returned air event IDs
+
+  /ids/traffic:
+    get:
+      summary: Get all traffic event IDs and trace IDs
+      operationId: app.get_all_traffic_ids
+      description: Return all traffic flow event_id and trace_id values from Kafka
+      responses:
+        '200':
+          description: Successfully returned traffic event IDs
+
