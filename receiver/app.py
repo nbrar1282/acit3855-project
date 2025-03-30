@@ -16,7 +16,7 @@ with open("./config/log_conf.yml", "r") as f:
     logging.config.dictConfig(LOG_CONFIG)
 
 
-logger = logging.getLogger("basicLogger")  # Get the logger
+logger = logging.getLogger("basicLogger")  # Get the loggers
 
 # Load configuration from YAML file
 with open("./config/app_conf.yml", "r") as f:
