@@ -33,8 +33,8 @@ def run_consistency_checks():
     analyzer_set = {(e["trace_id"], e["event_id"]) for e in analyzer_ids}
     storage_set = {(e["trace_id"], e["event_id"]) for e in storage_ids}
 
-    missing_in_db = [dict(trace_id=t[0], id=t[1], type="unknown") for t in analyzer_set - storage_set]
-    missing_in_queue = [dict(trace_id=t[0], id=t[1], type="unknown") for t in storage_set - analyzer_set]
+    missing_in_db = [dict(trace_id=t[0], event_id=t[1], type="unknown") for t in analyzer_set - storage_set]
+    missing_in_queue = [dict(trace_id=t[0], event_id=t[1], type="unknown") for t in storage_set - analyzer_set]
 
     output = {
         "last_updated": datetime.utcnow().isoformat() + "Z",
