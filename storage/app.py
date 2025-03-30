@@ -179,8 +179,8 @@ def get_air_ids():
     """Return all air_quality event IDs and trace IDs."""
     session = SessionLocal()
     try:
-        results = session.query(AirQualityEvent.id, AirQualityEvent.trace_id).all()
-        events = [{"id": r[0], "trace_id": r[1]} for r in results]
+        results = session.query(AirQualityEvent.sensor_id, AirQualityEvent.trace_id).all()
+        events = [{"event_id": r[0], "trace_id": r[1]} for r in results]
         return events, 200
     except Exception as e:
         logger.error("Error getting air IDs: %s", str(e))
@@ -193,8 +193,8 @@ def get_traffic_ids():
     """Return all traffic_flow event IDs and trace IDs."""
     session = SessionLocal()
     try:
-        results = session.query(TrafficFlowEvent.id, TrafficFlowEvent.trace_id).all()
-        events = [{"id": r[0], "trace_id": r[1]} for r in results]
+        results = session.query(TrafficFlowEvent.road_id, TrafficFlowEvent.trace_id).all()
+        events = [{"event_id": r[0], "trace_id": r[1]} for r in results]
         return events, 200
     except Exception as e:
         logger.error("Error getting traffic IDs: %s", str(e))

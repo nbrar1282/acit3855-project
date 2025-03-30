@@ -123,7 +123,7 @@ def get_all_air_ids():
             if data.get("type") == "air_quality":
                 payload = data["payload"]
                 results.append({
-                    "id": payload.get("id"),  
+                    "event_id": payload.get("sensor_id"),  
                     "trace_id": payload.get("trace_id")
                 })
         except Exception as e:
@@ -149,7 +149,7 @@ def get_all_traffic_ids():
             if data.get("type") == "traffic_flow":
                 payload = data["payload"]
                 results.append({
-                    "id": payload.get("id"),  
+                    "event_id": payload.get("road_id"),  
                     "trace_id": payload.get("trace_id")
                 })
         except Exception as e:
