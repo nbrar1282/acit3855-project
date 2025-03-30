@@ -12,6 +12,7 @@ import yaml
 from pykafka import KafkaClient
 from pykafka.common import OffsetType
 from sqlalchemy import select
+from flask import request 
 
 from models import SessionLocal, AirQualityEvent, TrafficFlowEvent, init_db  # Import models
 
@@ -44,10 +45,16 @@ def get_air_quality_events(start_timestamp, end_timestamp):
         start = datetime.fromisoformat(start_timestamp.replace("Z", ""))
         end = datetime.fromisoformat(end_timestamp.replace("Z", ""))
 
+        # Get pagination params (optional)
+        offset = int(request.args.get("start", 0))
+        limit = int(request.args.get("limit", 100))
+
         statement = (
             select(AirQualityEvent)
             .where(AirQualityEvent.date_created >= start)
             .where(AirQualityEvent.date_created < end)
+            .offset(offset)
+            .limit(limit)
         )
 
         results = session.execute(statement).scalars().all()
@@ -66,11 +73,16 @@ def get_traffic_flow_events(start_timestamp, end_timestamp):
     try:
         start = datetime.fromisoformat(start_timestamp.replace("Z", ""))
         end = datetime.fromisoformat(end_timestamp.replace("Z", ""))
+        # Get pagination params (optional)
+        offset = int(request.args.get("start", 0))
+        limit = int(request.args.get("limit", 100))
 
         statement = (
             select(TrafficFlowEvent)
             .where(TrafficFlowEvent.date_created >= start)
             .where(TrafficFlowEvent.date_created < end)
+            .offset(offset)
+            .limit(limit)
         )
 
         results = session.execute(statement).scalars().all()

@@ -31,6 +31,20 @@ paths:
             type: string
             format: date-time
             example: "2024-02-01T00:00:00Z"
+        - name: start
+          in: query
+          required: false
+          description: The starting index for pagination
+          schema:
+            type: integer
+            example: 0
+        - name: limit
+          in: query
+          required: false
+          description: The maximum number of events to return
+          schema:
+            type: integer
+            example: 100
       responses:
         '200':
           description: Successfully retrieved air quality events
@@ -77,6 +91,20 @@ paths:
             type: string
             format: date-time
             example: "2024-02-01T00:00:00Z"
+        - name: start
+          in: query
+          required: false
+          description: The starting index for pagination
+          schema:
+            type: integer
+            example: 0
+        - name: limit
+          in: query
+          required: false
+          description: The maximum number of events to return
+          schema:
+            type: integer
+            example: 100
       responses:
         '200':
           description: Successfully retrieved traffic flow events

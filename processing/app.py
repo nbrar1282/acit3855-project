@@ -41,6 +41,37 @@ DEFAULT_STATS = {
 }
 
 
+def fetch_all_events(endpoint, last_updated, current_time):
+    """Fetch all paginated events from storage service."""
+    all_events = []
+    start = 0
+    limit = 100
+
+    while True:
+        response = httpx.get(
+            f"{STORAGE_SERVICE_URL}/{endpoint}",
+            params={
+                "start_timestamp": last_updated,
+                "end_timestamp": current_time,
+                "start": start,
+                "limit": limit
+            }
+        )
+        if response.status_code != 200:
+            logger.error(f"Failed to fetch {endpoint} events. Status: {response.status_code}")
+            break
+
+        events = response.json()
+        all_events.extend(events)
+
+        if len(events) < limit:
+            break  # No more pages to fetch
+
+        start += limit
+
+    return all_events
+
+
 def populate_stats():
     """Periodically fetch data and update local statistics."""
     logger.info("Starting periodic statistics processing.")
@@ -56,51 +87,37 @@ def populate_stats():
     current_time = datetime.utcnow().isoformat() + "Z"
 
     try:
-        air_resp = httpx.get(
-            f"{STORAGE_SERVICE_URL}/city/airquality",
-            params={"start_timestamp": last_updated, "end_timestamp": current_time}
-        )
+        air_events = fetch_all_events("city/airquality", last_updated, current_time)
+        traffic_events = fetch_all_events("city/trafficflow", last_updated, current_time)
 
-        traffic_resp = httpx.get(
-            f"{STORAGE_SERVICE_URL}/city/trafficflow",
-            params={"start_timestamp": last_updated, "end_timestamp": current_time}
-        )
+        logger.info("Received %d air quality events.", len(air_events))
+        logger.info("Received %d traffic flow events.", len(traffic_events))
 
-        if air_resp.status_code == 200 and traffic_resp.status_code == 200:
-            air_events = air_resp.json()
-            traffic_events = traffic_resp.json()
+        stats["num_air_quality_events"] += len(air_events)
+        stats["num_traffic_flow_events"] += len(traffic_events)
 
-            logger.info("Received %d air quality events.", len(air_events))
-            logger.info("Received %d traffic flow events.", len(traffic_events))
+        if air_events:
+            stats["max_air_quality_index"] = max(
+                stats["max_air_quality_index"],
+                max(event["air_quality_index"] for event in air_events)
+            )
+        if traffic_events:
+            stats["max_vehicle_count"] = max(
+                stats["max_vehicle_count"],
+                max(event["vehicle_count"] for event in traffic_events)
+            )
 
-            stats["num_air_quality_events"] += len(air_events)
-            stats["num_traffic_flow_events"] += len(traffic_events)
+        stats["last_updated"] = current_time
 
-            if air_events:
-                stats["max_air_quality_index"] = max(
-                    stats["max_air_quality_index"],
-                    max(event["air_quality_index"] for event in air_events)
-                )
-            if traffic_events:
-                stats["max_vehicle_count"] = max(
-                    stats["max_vehicle_count"],
-                    max(event["vehicle_count"] for event in traffic_events)
-                )
+        with open(STATS_FILE, 'w', encoding='utf-8') as stats_file:
+            json.dump(stats, stats_file, indent=4)
 
-            stats["last_updated"] = current_time
-
-            with open(STATS_FILE, 'w', encoding='utf-8') as stats_file:
-                json.dump(stats, stats_file, indent=4)
-
-            logger.debug("Updated stats: %s", json.dumps(stats, indent=4))
-        else:
-            logger.error("Failed to fetch event data from storage service.")
+        logger.debug("Updated stats: %s", json.dumps(stats, indent=4))
 
     except Exception as error:
         logger.error("An error occurred during stats processing: %s", str(error))
 
     logger.info("Periodic statistics processing completed.")
-
 
 def init_scheduler():
     """Starts the background scheduler to periodically call populate_stats."""
