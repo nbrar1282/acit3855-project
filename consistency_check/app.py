@@ -63,4 +63,4 @@ def get_checks():
     return data, 200
 
 if __name__ == "__main__":
-    app.run(port=8300)
+    app.run(host="0.0.0.0", port=8300)

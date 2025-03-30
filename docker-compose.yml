@@ -157,6 +157,8 @@ services:
         - ./config/consistency_check:/app/config
         - ./logs:/app/logs
         - ./data/consistency_check:/app/data
+      expose:
+       - "8300"
       depends_on:
         - analyzer
         - storage
