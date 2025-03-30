@@ -4,11 +4,13 @@ import os
 from datetime import datetime
 import httpx
 import connexion
+import yaml
 
 app = connexion.FlaskApp(__name__, specification_dir="./")
 app.add_api("openapi.yml", base_path="/consistency_check")
 
-APP_CONF = json.load(open("config/app_conf.yml"))
+with open("config/app_conf.yml", "r") as f:
+    APP_CONF = yaml.safe_load(f)
 
 DATA_FILE = APP_CONF["datastore"]["filepath"]
 
