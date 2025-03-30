@@ -5,7 +5,7 @@ import logging
 import logging.config
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import connexion
 import httpx
@@ -52,22 +52,18 @@ def populate_stats():
     else:
         stats = DEFAULT_STATS.copy()
 
-    # Subtract 5 seconds from last_updated to ensure we don’t miss late events
-    last_updated_raw = stats.get("last_updated", "1970-01-01T00:00:00Z")
-    last_updated_dt = datetime.fromisoformat(last_updated_raw.replace("Z", ""))
-    adjusted_last_updated = (last_updated_dt - timedelta(seconds=5)).isoformat() + "Z"
-
+    last_updated = stats.get("last_updated", "1970-01-01T00:00:00Z")
     current_time = datetime.utcnow().isoformat() + "Z"
 
     try:
         air_resp = httpx.get(
             f"{STORAGE_SERVICE_URL}/city/airquality",
-            params={"start_timestamp": adjusted_last_updated, "end_timestamp": current_time}
+            params={"start_timestamp": last_updated, "end_timestamp": current_time}
         )
 
         traffic_resp = httpx.get(
             f"{STORAGE_SERVICE_URL}/city/trafficflow",
-            params={"start_timestamp": adjusted_last_updated, "end_timestamp": current_time}
+            params={"start_timestamp": last_updated, "end_timestamp": current_time}
         )
 
         if air_resp.status_code == 200 and traffic_resp.status_code == 200:
