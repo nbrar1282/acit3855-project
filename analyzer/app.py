@@ -107,39 +107,3 @@ app.add_middleware(
 
 if __name__ == "__main__":
     app.run(port=8200, host="0.0.0.0")
-
-# def get_event_by_index(event_type, index):
-#     """Retrieves an event of a specific type at the given index from Kafka."""
-#     with consumer_lock:
-#         consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
-
-#         air_quality_events = []
-#         traffic_flow_events = []
-
-#         counter = 0
-#         for msg in consumer:
-#             if msg is None:
-#                 break
-#             message = msg.value.decode("utf-8")
-#             data = json.loads(message)
-
-#             # Categorize event based on type
-#             if data["type"] == "air_quality":
-#                 air_quality_events.append(data["payload"])
-#             elif data["type"] == "traffic_flow":
-#                 traffic_flow_events.append(data["payload"])
-
-#         # Select event list based on event type
-#         if event_type == "air_quality":
-#             events_list = air_quality_events
-#         elif event_type == "traffic_flow":
-#             events_list = traffic_flow_events
-#         else:
-#             return {"message": "Invalid event type"}, 400
-
-#         # Check if index exists
-#         if index >= len(events_list) or index < 0:
-#             return {"message": f"No event found at index {index}"}, 404
-
-#         logger.info(f"Returning {event_type} event at index {index}")
-#         return events_list[index], 200
