@@ -150,7 +150,7 @@ services:
       - processing
       - storage
 
-    consistency_check:
+  consistency_check:
       build:
         context: ./consistency_check
       volumes:
