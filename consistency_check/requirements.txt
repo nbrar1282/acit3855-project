@@ -1,2 +1,4 @@
-connexion[swagger-ui]
+connexion[flask,uvicorn,swagger-ui]
 requests
+pykafka
+setuptools
