@@ -60,6 +60,8 @@ services:
       timeout: 1s
 
   receiver:
+    deploy:
+      replicas: 3
     build:
       context: nbrar1282/receiver:latest #./receiver
       dockerfile: Dockerfile
@@ -98,6 +100,8 @@ services:
     build:
       context: nbrar1282/processing:latest #./processing
       dockerfile: Dockerfile
+    environment:
+      CORS_ALLOW_ALL: "no"
     ports:
       - "8100:8100"
     volumes:
@@ -114,6 +118,8 @@ services:
     build:
       context: nbrar1282/analyzer:latest #./analyzer
       dockerfile: Dockerfile
+    environment:
+      CORS_ALLOW_ALL: "no"
     ports:
       - "8200:8200"
     volumes:
