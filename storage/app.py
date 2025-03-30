@@ -1,154 +1,105 @@
-import connexion
-from datetime import datetime
-from connexion import NoContent
+"""Storage Service — Receives events from Kafka and stores them in the database."""
+
+import json
+import logging
 import logging.config
-import yaml
-import os
-from models import SessionLocal, AirQualityEvent, TrafficFlowEvent, init_db  # Import models
-from sqlalchemy import select
 import time
+from datetime import datetime
+from threading import Thread
+
+import connexion
+import yaml
 from pykafka import KafkaClient
 from pykafka.common import OffsetType
+from sqlalchemy import select
 
-from threading import Thread
-import json
+from models import SessionLocal, AirQualityEvent, TrafficFlowEvent, init_db  # Import models
 
-
+# Configure logging to use UTC timestamps
 logging.Formatter.converter = time.gmtime
 
-
 # Load logging configuration
-with open('./config/log_conf.yml', "r") as f:
+with open('./config/log_conf.yml', "r", encoding="utf-8") as f:
     LOG_CONFIG = yaml.safe_load(f.read())
     logging.config.dictConfig(LOG_CONFIG)
 
-logger = logging.getLogger("basicLogger")  # Get the configured logger
+logger = logging.getLogger("basicLogger")
 
-with open('./config/app_conf.yml', "r") as f:
+# Load application configuration
+with open('./config/app_conf.yml', "r", encoding="utf-8") as f:
     app_config = yaml.safe_load(f.read())
 
-# Extract Kafka connection details
+# Kafka connection details
 KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
-TOPIC_NAME = app_config['events']['topic']    
+TOPIC_NAME = app_config['events']['topic']
 
-# Initialize database tables
+# Initialize DB
 init_db()
 
-# Get Air Quality Events
+
 def get_air_quality_events(start_timestamp, end_timestamp):
     """Retrieve air quality events within the date range."""
     session = SessionLocal()
     try:
-        # Convert ISO timestamps to datetime objects
         start = datetime.fromisoformat(start_timestamp.replace("Z", ""))
         end = datetime.fromisoformat(end_timestamp.replace("Z", ""))
 
-        # Dynamic SQLAlchemy ORM Query
         statement = (
             select(AirQualityEvent)
             .where(AirQualityEvent.date_created >= start)
             .where(AirQualityEvent.date_created < end)
         )
 
-        # Execute the ORM query
         results = session.execute(statement).scalars().all()
-
-        # Convert ORM objects to dictionaries for JSON response
         events = [result.to_dict() for result in results]
 
-        logger.info(f"Found {len(events)} air quality events (start: {start}, end: {end})")
+        logger.info("Found %d air quality events (start: %s, end: %s)", len(events), start, end)
         return events, 200
 
     finally:
         session.close()
 
 
-# Get Traffic Flow Events
 def get_traffic_flow_events(start_timestamp, end_timestamp):
     """Retrieve traffic flow events within the date range."""
     session = SessionLocal()
     try:
-        # Convert ISO timestamps to datetime objects
         start = datetime.fromisoformat(start_timestamp.replace("Z", ""))
         end = datetime.fromisoformat(end_timestamp.replace("Z", ""))
 
-        # Dynamic SQLAlchemy ORM Query
         statement = (
             select(TrafficFlowEvent)
             .where(TrafficFlowEvent.date_created >= start)
             .where(TrafficFlowEvent.date_created < end)
         )
 
-        # Execute the ORM query
         results = session.execute(statement).scalars().all()
-
-        # Convert to dictionary for JSON response
         events = [result.to_dict() for result in results]
 
-        logger.info(f"Found {len(events)} traffic flow events (start: {start}, end: {end})")
+        logger.info("Found %d traffic flow events (start: %s, end: %s)", len(events), start, end)
         return events, 200
 
     finally:
         session.close()
 
 
-def process_messages():
-    """ Process event messages """
-    logger.info("Starting Kafka consumer thread...")
-
-    try:
-        client = KafkaClient(hosts=KAFKA_HOST)
-        topic = client.topics[str.encode(TOPIC_NAME)]
-        
-        consumer = topic.get_simple_consumer(
-            consumer_group=b'event_group',
-            reset_offset_on_start=False,
-            auto_offset_reset=OffsetType.LATEST
-        )
-
-        for msg in consumer:
-            try:
-                msg_str = msg.value.decode('utf-8')
-                msg = json.loads(msg_str)
-
-                logger.info(f"Message: {msg}")
-
-                payload = msg["payload"]
-
-                if msg["type"] == "air_quality":
-                    store_air_quality_event(payload)
-                elif msg["type"] == "traffic_flow":
-                    store_traffic_flow_event(payload)
-
-                consumer.commit_offsets()
-            
-            except Exception as e:
-                logger.error(f"Error processing Kafka message: {str(e)}", exc_info=True)
-
-    except Exception as e:
-        logger.critical(f"Critical Kafka error: {str(e)}", exc_info=True)
-
-
 def store_air_quality_event(payload):
     """Stores an air quality event in the database."""
     session = SessionLocal()
     try:
-        recorded_at_dt = datetime.fromisoformat(payload["recorded_at"].replace("Z", ""))
-
+        recorded_at = datetime.fromisoformat(payload["recorded_at"].replace("Z", ""))
         event = AirQualityEvent(
             trace_id=payload["trace_id"],
             sensor_id=payload["sensor_id"],
             air_quality_index=payload["air_quality_index"],
-            recorded_at=recorded_at_dt,
+            recorded_at=recorded_at,
             zone_id=payload["zone_id"]
         )
         session.add(event)
         session.commit()
-
-        logger.info(f"Stored air_quality event with trace_id {payload['trace_id']}")
-
-    except Exception as e:
-        logger.error(f"Error storing air_quality event: {str(e)}")
+        logger.info("Stored air_quality event with trace_id %s", payload["trace_id"])
+    except Exception as error:
+        logger.error("Error storing air_quality event: %s", str(error))
         session.rollback()
     finally:
         session.close()
@@ -158,36 +109,68 @@ def store_traffic_flow_event(payload):
     """Stores a traffic flow event in the database."""
     session = SessionLocal()
     try:
-        time_registered_dt = datetime.fromisoformat(payload["time_registered"].replace("Z", ""))
-
+        time_registered = datetime.fromisoformat(payload["time_registered"].replace("Z", ""))
         event = TrafficFlowEvent(
             trace_id=payload["trace_id"],
             road_id=payload["road_id"],
             vehicle_count=payload["vehicle_count"],
-            time_registered=time_registered_dt,
+            time_registered=time_registered,
             average_speed=payload["average_speed(in km/h)"]
         )
         session.add(event)
         session.commit()
-
-        logger.info(f"Stored traffic_flow event with trace_id {payload['trace_id']}")
-
-    except Exception as e:
-        logger.error(f"Error storing traffic_flow event: {str(e)}")
+        logger.info("Stored traffic_flow event with trace_id %s", payload["trace_id"])
+    except Exception as error:
+        logger.error("Error storing traffic_flow event: %s", str(error))
         session.rollback()
     finally:
         session.close()
 
 
+def process_messages():
+    """ Continuously consume and process Kafka messages """
+    logger.info("Starting Kafka consumer thread...")
+
+    try:
+        client = KafkaClient(hosts=KAFKA_HOST)
+        topic = client.topics[str.encode(TOPIC_NAME)]
+        consumer = topic.get_simple_consumer(
+            consumer_group=b'event_group',
+            reset_offset_on_start=False,
+            auto_offset_reset=OffsetType.LATEST
+        )
+
+        for message in consumer:
+            try:
+                message_str = message.value.decode('utf-8')
+                message = json.loads(message_str)
+                logger.info("Message: %s", message)
+
+                payload = message["payload"]
+
+                if message["type"] == "air_quality":
+                    store_air_quality_event(payload)
+                elif message["type"] == "traffic_flow":
+                    store_traffic_flow_event(payload)
+
+                consumer.commit_offsets()
+
+            except Exception as error:
+                logger.error("Error processing Kafka message: %s", str(error), exc_info=True)
+
+    except Exception as error:
+        logger.critical("Critical Kafka error: %s", str(error), exc_info=True)
+
+
 def setup_kafka_thread():
-    """Set up a thread to consume Kafka messages continuously."""
-    t1 = Thread(target=process_messages)
-    t1.setDaemon(True)
-    t1.start()
+    """Set up a background thread to process Kafka messages."""
+    kafka_thread = Thread(target=process_messages)
+    kafka_thread.daemon = True
+    kafka_thread.start()
 
-# Create the application instance
+
+# Create the app
 app = connexion.FlaskApp(__name__, specification_dir='')
-
 app.add_api("lab1.yaml", base_path="/storage", strict_validation=True, validate_responses=True)
 
 if __name__ == "__main__":
