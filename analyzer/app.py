@@ -4,6 +4,7 @@ import json
 import logging
 import logging.config
 import time
+from typing import Tuple, Any
 
 import connexion
 import yaml
@@ -12,8 +13,11 @@ from pykafka import KafkaClient
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
 
-# Use UTC timestamps for logging
+# Use UTC timestamps in logs
 logging.Formatter.converter = time.gmtime
+
+# Constants
+KAFKA_TIMEOUT_MS = 1000  # Kafka consumer timeout
 
 # Load logging configuration
 with open("./config/log_conf.yml", "r", encoding="utf-8") as config_file:
@@ -26,25 +30,31 @@ logger = logging.getLogger("basicLogger")
 with open("./config/app_conf.yml", "r", encoding="utf-8") as config_file:
     app_config = yaml.safe_load(config_file.read())
 
-# Kafka setup
+# Kafka connection
 KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
 TOPIC_NAME = app_config['events']['topic']
 client = KafkaClient(hosts=KAFKA_HOST)
 topic = client.topics[str.encode(TOPIC_NAME)]
 
 
-def get_event_by_index(event_type, index):
+def get_event_by_index(event_type: str, index: int) -> Tuple[dict, int]:
     """Retrieve a specific event by index for a given event type."""
-    consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True,
+        consumer_timeout_ms=KAFKA_TIMEOUT_MS
+    )
     counter = 0
 
     for msg in consumer:
         if msg is None:
             break
-        message = msg.value.decode("utf-8")
-        data = json.loads(message)
+        try:
+            data = json.loads(msg.value.decode("utf-8"))
+        except (json.JSONDecodeError, AttributeError) as error:
+            logger.warning("Skipping malformed message: %s", str(error))
+            continue
 
-        if data["type"] == event_type:
+        if data.get("type") == event_type:
             if counter == index:
                 logger.info("Returning %s event at index %d", event_type, index)
                 return data["payload"], 200
@@ -54,31 +64,38 @@ def get_event_by_index(event_type, index):
     return {"message": f"No {event_type} event found at index {index}"}, 404
 
 
-def get_air_quality_event(index):
+def get_air_quality_event(index: int) -> Tuple[dict, int]:
     """Handle request to get an air quality event by index."""
     return get_event_by_index("air_quality", index)
 
 
-def get_traffic_flow_event(index):
+def get_traffic_flow_event(index: int) -> Tuple[dict, int]:
     """Handle request to get a traffic flow event by index."""
     return get_event_by_index("traffic_flow", index)
 
 
-def get_event_stats():
+def get_event_stats() -> Tuple[Any, int]:
     """Return count of air quality and traffic flow events currently in Kafka."""
-    consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True,
+        consumer_timeout_ms=KAFKA_TIMEOUT_MS
+    )
+
     air_quality_count = 0
     traffic_flow_count = 0
 
     for msg in consumer:
         if msg is None:
             break
-        message = msg.value.decode("utf-8")
-        data = json.loads(message)
+        try:
+            data = json.loads(msg.value.decode("utf-8"))
+        except (json.JSONDecodeError, AttributeError) as error:
+            logger.warning("Skipping malformed message in stats: %s", str(error))
+            continue
 
-        if data["type"] == "air_quality":
+        if data.get("type") == "air_quality":
             air_quality_count += 1
-        elif data["type"] == "traffic_flow":
+        elif data.get("type") == "traffic_flow":
             traffic_flow_count += 1
 
     stats = {
@@ -90,9 +107,10 @@ def get_event_stats():
     return jsonify(stats), 200
 
 
-# Setup Flask app using Connexion
+# Setup Connexion app
 app = connexion.FlaskApp(__name__, specification_dir="")
 app.add_api("analyzer.yml", base_path="/analyzer", strict_validation=True, validate_responses=True)
+
 app.add_middleware(
     CORSMiddleware,
     position=MiddlewarePosition.BEFORE_EXCEPTION,
