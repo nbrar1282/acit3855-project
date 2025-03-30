@@ -1,4 +1,6 @@
-connexion[flask,uvicorn,swagger-ui]
+flask
+connexion
+pyyaml
 httpx
 pykafka
 setuptools
