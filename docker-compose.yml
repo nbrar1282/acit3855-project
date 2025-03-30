@@ -63,7 +63,8 @@ services:
     deploy:
       replicas: 3
     build:
-      context: nbrar1282/receiver:latest #./receiver
+      context: ./receiver
+      #context: nbrar1282/receiver:latest
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -78,7 +79,8 @@ services:
 
   storage:
     build:
-      context: nbrar1282/storage:latest #./storage
+      context: ./storage
+      #context: nbrar1282/storage:latest
       dockerfile: Dockerfile
     # ports:
     #   - "8090:8090"
@@ -98,7 +100,8 @@ services:
 
   processing:
     build:
-      context: nbrar1282/processing:latest #./processing
+      context: ./processing
+      #context: nbrar1282/processing:latest 
       dockerfile: Dockerfile
     environment:
       CORS_ALLOW_ALL: "no"
@@ -116,7 +119,8 @@ services:
 
   analyzer:
     build:
-      context: nbrar1282/analyzer:latest #./analyzer
+      context: ./analyzer
+      #context: nbrar1282/analyzer:latest 
       dockerfile: Dockerfile
     environment:
       CORS_ALLOW_ALL: "no"
