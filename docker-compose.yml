@@ -98,6 +98,7 @@ services:
 
   processing:
     image: nbrar1282/processing:latest
+    pull_policy: always
     # build:
     #   context: ./processing 
     #   dockerfile: Dockerfile
