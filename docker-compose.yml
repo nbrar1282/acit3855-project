@@ -62,11 +62,11 @@ services:
   receiver:
     deploy:
       replicas: 3
-    image: nbrar1282/receiver:latest
-    pull_policy: always
-    # build:
-    #   context: ./receiver
-    #   dockerfile: Dockerfile
+    # image: nbrar1282/receiver:latest
+    # pull_policy: always
+    build:
+      context: ./receiver
+      dockerfile: Dockerfile
     volumes:
       - ./config/receiver:/app/config
       - ./logs:/app/logs
@@ -77,11 +77,11 @@ services:
     restart: always
 
   storage:
-    image: nbrar1282/storage:latest
-    pull_policy: always
-    # build:
-    #   context: ./storage
-    #   dockerfile: Dockerfile
+    # image: nbrar1282/storage:latest
+    # pull_policy: always
+    build:
+      context: ./storage
+      dockerfile: Dockerfile
     volumes:
       - ./config/storage:/app/config
       - ./logs:/app/logs
@@ -99,11 +99,11 @@ services:
     restart: always
 
   processing:
-    image: nbrar1282/processing:latest
-    pull_policy: always
-    # build:
-    #   context: ./processing 
-    #   dockerfile: Dockerfile
+    # image: nbrar1282/processing:latest
+    # pull_policy: always
+    build:
+      context: ./processing 
+      dockerfile: Dockerfile
     environment:
       CORS_ALLOW_ALL: "no"
     ports:
@@ -119,11 +119,11 @@ services:
     restart: always
 
   analyzer:
-    image: nbrar1282/analyzer:latest 
-    pull_policy: always
-    # build:
-    #   context: ./analyzer
-    #   dockerfile: Dockerfile
+    # image: nbrar1282/analyzer:latest 
+    # pull_policy: always
+    build:
+      context: ./analyzer
+      dockerfile: Dockerfile
     environment:
       CORS_ALLOW_ALL: "no"
     ports:
