@@ -63,6 +63,7 @@ services:
     deploy:
       replicas: 3
     image: nbrar1282/receiver:latest
+    pull_policy: always
     # build:
     #   context: ./receiver
     #   dockerfile: Dockerfile
@@ -77,6 +78,7 @@ services:
 
   storage:
     image: nbrar1282/storage:latest
+    pull_policy: always
     # build:
     #   context: ./storage
     #   dockerfile: Dockerfile
@@ -118,6 +120,7 @@ services:
 
   analyzer:
     image: nbrar1282/analyzer:latest 
+    pull_policy: always
     # build:
     #   context: ./analyzer
     #   dockerfile: Dockerfile
