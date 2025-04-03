@@ -71,7 +71,8 @@ services:
       - ./config/receiver:/app/config
       - ./logs:/app/logs
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - app-network
     restart: always
@@ -149,10 +150,10 @@ services:
     volumes:
       - ./dashboard/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - receiver
-      - analyzer
-      - processing
-      - storage
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
 
   consistency_check:
       build:
@@ -164,9 +165,10 @@ services:
       expose:
        - "8300"
       depends_on:
-        - analyzer
-        - storage
-        - processing
+        mysql:
+          condition: service_healthy
+        kafka:
+          condition: service_healthy
       networks:
         - app-network
       restart: always
