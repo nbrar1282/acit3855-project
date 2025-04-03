@@ -1,140 +1,121 @@
 """Processing Service — Periodically aggregates event stats from the storage service."""
 
-import json
-import logging
-import logging.config
-import os
-import time
-from datetime import datetime
-
-import connexion
-import httpx
-import yaml
-from apscheduler.schedulers.background import BackgroundScheduler
+from connexion import FlaskApp
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
+import json
+import os
+from datetime import datetime
+import yaml
+import logging
+import logging.config
+from apscheduler.schedulers.background import BackgroundScheduler
+import httpx
+import pytz
 
-# Configure logging to use UTC
-logging.Formatter.converter = time.gmtime
+# Load app configuration
+with open('./config/app_conf.yml', 'r') as f:
+    app_config = yaml.safe_load(f.read())
 
-# Load logging config
-with open('./config/log_conf.yml', 'r', encoding='utf-8') as config_file:
-    LOG_CONFIG = yaml.safe_load(config_file.read())
+# Load logging configuration
+with open("./config/log_conf.yml", "r") as f:
+    LOG_CONFIG = yaml.safe_load(f.read())
     logging.config.dictConfig(LOG_CONFIG)
 
-logger = logging.getLogger("basicLogger")
+logger = logging.getLogger('basicLogger')
 
-# Load application config
-with open('./config/app_conf.yml', 'r', encoding='utf-8') as config_file:
-    app_config = yaml.safe_load(config_file.read())
-
+STATS_FILE_PATH = app_config['stats']['filename']
 STORAGE_SERVICE_URL = app_config['storage']['url']
-STATS_FILE = app_config['stats']['filename']
 
-# Default stats structure
-DEFAULT_STATS = {
-    "num_air_quality_events": 0,
-    "max_air_quality_index": 0,
-    "num_traffic_flow_events": 0,
-    "max_vehicle_count": 0,
-    "last_updated": "1970-01-01T00:00:00Z"
-}
-
-
-def populate_stats():
-    """Periodically fetch data and update local statistics."""
-    logger.info("Starting periodic statistics processing.")
-    logger.info("New log message")
-    # Load previous stats or start fresh
-    if os.path.exists(STATS_FILE):
-        with open(STATS_FILE, 'r', encoding='utf-8') as stats_file:
-            stats = json.load(stats_file)
+def read_stats():
+    if os.path.exists(STATS_FILE_PATH):
+        with open(STATS_FILE_PATH, 'r') as file:
+            return json.load(file)
     else:
-        stats = DEFAULT_STATS.copy()
+        default_stats = {
+            "num_air_quality_events": 0,
+            "max_air_quality_index": 0,
+            "num_traffic_flow_events": 0,
+            "max_vehicle_count": 0,
+            "last_updated": "1970-01-01T00:00:00Z"
+        }
+        write_stats(default_stats)
+        return default_stats
 
-    last_updated = stats.get("last_updated", "1970-01-01T00:00:00Z")
-    current_time = datetime.utcnow().isoformat() + "Z"
-
-    try:
-        air_resp = httpx.get(
-            f"{STORAGE_SERVICE_URL}/city/airquality",
-            params={"start_timestamp": last_updated, "end_timestamp": current_time}
-        )
-
-        traffic_resp = httpx.get(
-            f"{STORAGE_SERVICE_URL}/city/trafficflow",
-            params={"start_timestamp": last_updated, "end_timestamp": current_time}
-        )
-
-        if air_resp.status_code == 200 and traffic_resp.status_code == 200:
-            air_events = air_resp.json()
-            traffic_events = traffic_resp.json()
-
-            logger.info("Received %d air quality events.", len(air_events))
-            logger.info("Received %d traffic flow events.", len(traffic_events))
-
-            stats["num_air_quality_events"] += len(air_events)
-            stats["num_traffic_flow_events"] += len(traffic_events)
-
-            if air_events:
-                stats["max_air_quality_index"] = max(
-                    stats["max_air_quality_index"],
-                    max(event["air_quality_index"] for event in air_events)
-                )
-            if traffic_events:
-                stats["max_vehicle_count"] = max(
-                    stats["max_vehicle_count"],
-                    max(event["vehicle_count"] for event in traffic_events)
-                )
-
-            stats["last_updated"] = current_time
-
-            with open(STATS_FILE, 'w', encoding='utf-8') as stats_file:
-                json.dump(stats, stats_file, indent=4)
-
-            logger.debug("Updated stats: %s", json.dumps(stats, indent=4))
-        else:
-            logger.error("Failed to fetch event data from storage service.")
-
-    except Exception as error:
-        logger.error("An error occurred during stats processing: %s", str(error))
-
-    logger.info("Periodic statistics processing completed.")
-
-
-def init_scheduler():
-    """Starts the background scheduler to periodically call populate_stats."""
-    scheduler = BackgroundScheduler(daemon=True)
-    scheduler.add_job(
-        populate_stats,
-        'interval',
-        seconds=app_config['scheduler']['interval']
-    )
-    scheduler.start()
-
+def write_stats(stats):
+    with open(STATS_FILE_PATH, 'w') as file:
+        json.dump(stats, file, indent=4)
 
 def get_stats():
-    """Handles GET requests to fetch current stats."""
-    logger.info("GET /stats request received.")
-
-    if not os.path.exists(STATS_FILE):
-        logger.error("Statistics file does not exist.")
-        return {"message": "Statistics do not exist"}, 404
-
-    with open(STATS_FILE, 'r', encoding='utf-8') as stats_file:
-        stats = json.load(stats_file)
-
-    logger.debug("Returning statistics: %s", json.dumps(stats, indent=4))
-    logger.info("GET /stats request processed successfully.")
-
+    logger.info("Received request for /stats")
+    stats = read_stats()
+    logger.debug(f"Current stats: {stats}")
+    logger.info("Request for /stats completed.")
     return stats, 200
 
+def populate_stats():
+    logger.info("Periodic processing has started.")
 
-# Create the app and configure middleware
-app = connexion.FlaskApp(__name__, specification_dir='')
-app.add_api("processing.yaml", base_path="/processing", strict_validation=True, validate_responses=True)
+    stats = read_stats()
+    last_updated_timestamp = stats["last_updated"]
 
-if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
+    try:
+        last_updated = datetime.strptime(last_updated_timestamp, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        logger.warning(f"Invalid timestamp format in stats: {last_updated_timestamp}, defaulting to epoch.")
+        last_updated = datetime(1970, 1, 1, tzinfo=pytz.utc)
+
+    now = datetime.now(pytz.utc)
+    start_timestamp = last_updated.strftime("%Y-%m-%dT%H:%M:%SZ")
+    end_timestamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    try:
+        # Fetch air quality events
+        air_response = httpx.get(f"{STORAGE_SERVICE_URL}/city/airquality?start_timestamp={start_timestamp}&end_timestamp={end_timestamp}")
+        if air_response.status_code == 200:
+            air_events = air_response.json()
+            logger.info(f"Received {len(air_events)} new air quality events")
+        else:
+            logger.error(f"Error retrieving air quality events: {air_response.status_code}")
+            air_events = []
+
+        # Fetch traffic flow events
+        traffic_response = httpx.get(f"{STORAGE_SERVICE_URL}/city/trafficflow?start_timestamp={start_timestamp}&end_timestamp={end_timestamp}")
+        if traffic_response.status_code == 200:
+            traffic_events = traffic_response.json()
+            logger.info(f"Received {len(traffic_events)} new traffic flow events")
+        else:
+            logger.error(f"Error retrieving traffic flow events: {traffic_response.status_code}")
+            traffic_events = []
+
+        # Update stats
+        stats["num_air_quality_events"] += len(air_events)
+        if air_events:
+            max_air_index = max([event['air_quality_index'] for event in air_events])
+            stats["max_air_quality_index"] = max(stats["max_air_quality_index"], max_air_index)
+
+        stats["num_traffic_flow_events"] += len(traffic_events)
+        if traffic_events:
+            max_vehicle_count = max([event['vehicle_count'] for event in traffic_events])
+            stats["max_vehicle_count"] = max(stats["max_vehicle_count"], max_vehicle_count)
+
+        stats["last_updated"] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        write_stats(stats)
+        logger.info("Periodic processing has ended.")
+
+    except Exception as e:
+        logger.error(f"Error during periodic processing: {e}")
+
+def init_scheduler():
+    sched = BackgroundScheduler(daemon=True)
+    sched.add_job(populate_stats, 'interval', seconds=app_config['scheduler']['interval'])
+    sched.start()
+
+# Initialize app
+app = FlaskApp(__name__)
+
+if os.getenv("CORS_ALLOW_ALL") == "yes":
     app.add_middleware(
         CORSMiddleware,
         position=MiddlewarePosition.BEFORE_EXCEPTION,
@@ -143,6 +124,8 @@ if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+app.add_api("processing.yml", base_path="/processing", strict_validation=True, validate_responses=True)
 
 if __name__ == "__main__":
     init_scheduler()
