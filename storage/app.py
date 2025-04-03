@@ -12,6 +12,8 @@ import yaml
 from kafka_wrapper.kafka_client import KafkaWrapper  # Uses our wrapper
 
 from models import SessionLocal, AirQualityEvent, TrafficFlowEvent, init_db
+from sqlalchemy import select
+
 
 # Configure logging to use UTC timestamps
 logging.Formatter.converter = time.gmtime
