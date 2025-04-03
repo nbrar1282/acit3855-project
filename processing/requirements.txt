@@ -3,4 +3,4 @@ httpx
 apscheduler
 pytz
 pykafka
-pkg_resources
+setuptools
