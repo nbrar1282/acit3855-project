@@ -27,14 +27,29 @@ def run_consistency_checks():
     storage_air_ids = httpx.get(f'{APP_CONF["storage"]["url"]}/ids/air').json()
     storage_traffic_ids = httpx.get(f'{APP_CONF["storage"]["url"]}/ids/traffic').json()
 
-    analyzer_ids = analyzer_air_ids + analyzer_traffic_ids
-    storage_ids = storage_air_ids + storage_traffic_ids
+    # Tag type with each entry
+    analyzer_ids = [
+        {"trace_id": e["trace_id"], "event_id": e["event_id"], "type": "air"} for e in analyzer_air_ids
+    ] + [
+        {"trace_id": e["trace_id"], "event_id": e["event_id"], "type": "traffic"} for e in analyzer_traffic_ids
+    ]
 
-    analyzer_set = {(e["trace_id"], e["event_id"]) for e in analyzer_ids}
-    storage_set = {(e["trace_id"], e["event_id"]) for e in storage_ids}
+    storage_ids = [
+        {"trace_id": e["trace_id"], "event_id": e["event_id"], "type": "air"} for e in storage_air_ids
+    ] + [
+        {"trace_id": e["trace_id"], "event_id": e["event_id"], "type": "traffic"} for e in storage_traffic_ids
+    ]
 
-    missing_in_db = [dict(trace_id=t[0], event_id=t[1], type="unknown") for t in analyzer_set - storage_set]
-    missing_in_queue = [dict(trace_id=t[0], event_id=t[1], type="unknown") for t in storage_set - analyzer_set]
+    # Use sets of tuples with type included
+    analyzer_set = {(e["trace_id"], e["event_id"], e["type"]) for e in analyzer_ids}
+    storage_set = {(e["trace_id"], e["event_id"], e["type"]) for e in storage_ids}
+
+    missing_in_db = [
+        {"trace_id": t[0], "event_id": t[1], "type": t[2]} for t in analyzer_set - storage_set
+    ]
+    missing_in_queue = [
+        {"trace_id": t[0], "event_id": t[1], "type": t[2]} for t in storage_set - analyzer_set
+    ]
 
     output = {
         "last_updated": datetime.utcnow().isoformat() + "Z",
@@ -53,6 +68,7 @@ def run_consistency_checks():
 
     duration_ms = int((time.time() - start_time) * 1000)
     return {"processing_time_ms": duration_ms}, 200
+
 
 def get_checks():
     if not os.path.exists(DATA_FILE):
