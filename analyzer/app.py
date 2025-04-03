@@ -10,15 +10,12 @@ from typing import Tuple, Any
 import connexion
 import yaml
 from flask import jsonify
-from pykafka import KafkaClient
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
+from kafka_wrapper.kafka_client import KafkaWrapper
 
 # Use UTC timestamps in logs
 logging.Formatter.converter = time.gmtime
-
-# Constants
-KAFKA_TIMEOUT_MS = 1000  # Kafka consumer timeout
 
 # Load logging configuration
 with open("./config/log_conf.yml", "r", encoding="utf-8") as config_file:
@@ -31,38 +28,54 @@ logger = logging.getLogger("basicLogger")
 with open("./config/app_conf.yml", "r", encoding="utf-8") as config_file:
     app_config = yaml.safe_load(config_file.read())
 
-# Kafka connection
+# Kafka connection details
 KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
 TOPIC_NAME = app_config['events']['topic']
-client = KafkaClient(hosts=KAFKA_HOST)
-topic = client.topics[str.encode(TOPIC_NAME)]
+
+
+def get_kafka_messages():
+    """Helper function to get all messages from Kafka topic."""
+    kafka_wrapper = KafkaWrapper(KAFKA_HOST, TOPIC_NAME)
+    messages = []
+    
+    # Use the messages() method from KafkaWrapper
+    for msg in kafka_wrapper.messages():
+        if msg is None:
+            break
+            
+        try:
+            data = json.loads(msg.value.decode("utf-8"))
+            messages.append(data)
+        except (json.JSONDecodeError, AttributeError) as error:
+            logger.warning("Skipping malformed message: %s", str(error))
+            continue
+            
+        # Break after consuming all available messages
+        # This is needed because messages() is an infinite iterator
+        if not kafka_wrapper.consumer.has_message_available():
+            break
+            
+    return messages
 
 
 def get_event_by_index(event_type: str, index: int) -> Tuple[dict, int]:
     """Retrieve a specific event by index for a given event type."""
-    consumer = topic.get_simple_consumer(
-        reset_offset_on_start=True,
-        consumer_timeout_ms=KAFKA_TIMEOUT_MS
-    )
-    counter = 0
-
-    for msg in consumer:
-        if msg is None:
-            break
-        try:
-            data = json.loads(msg.value.decode("utf-8"))
-        except (json.JSONDecodeError, AttributeError) as error:
-            logger.warning("Skipping malformed message: %s", str(error))
-            continue
-
-        if data.get("type") == event_type:
-            if counter == index:
-                logger.info("Returning %s event at index %d", event_type, index)
-                return data["payload"], 200
-            counter += 1
-
-    logger.warning("No %s event found at index %d", event_type, index)
-    return {"message": f"No {event_type} event found at index {index}"}, 404
+    try:
+        messages = get_kafka_messages()
+        
+        # Filter for the specific event type
+        filtered_events = [msg for msg in messages if msg.get("type") == event_type]
+        
+        if index < len(filtered_events):
+            logger.info("Returning %s event at index %d", event_type, index)
+            return filtered_events[index]["payload"], 200
+        else:
+            logger.warning("No %s event found at index %d", event_type, index)
+            return {"message": f"No {event_type} event found at index {index}"}, 404
+    
+    except Exception as e:
+        logger.error("Error retrieving event by index: %s", str(e))
+        return {"message": f"Error retrieving {event_type} event: {str(e)}"}, 500
 
 
 def get_air_quality_event(index: int) -> Tuple[dict, int]:
@@ -77,86 +90,66 @@ def get_traffic_flow_event(index: int) -> Tuple[dict, int]:
 
 def get_event_stats() -> Tuple[Any, int]:
     """Return count of air quality and traffic flow events currently in Kafka."""
-    consumer = topic.get_simple_consumer(
-        reset_offset_on_start=True,
-        consumer_timeout_ms=KAFKA_TIMEOUT_MS
-    )
+    try:
+        messages = get_kafka_messages()
+        
+        air_quality_count = sum(1 for msg in messages if msg.get("type") == "air_quality")
+        traffic_flow_count = sum(1 for msg in messages if msg.get("type") == "traffic_flow")
+        
+        stats = {
+            "num_air_quality_events": air_quality_count,
+            "num_traffic_flow_events": traffic_flow_count
+        }
+        
+        logger.info("Returning event stats: %s", stats)
+        return jsonify(stats), 200
+    
+    except Exception as e:
+        logger.error("Error retrieving event stats: %s", str(e))
+        return {"message": f"Error retrieving event stats: {str(e)}"}, 500
 
-    air_quality_count = 0
-    traffic_flow_count = 0
-
-    for msg in consumer:
-        if msg is None:
-            break
-        try:
-            data = json.loads(msg.value.decode("utf-8"))
-        except (json.JSONDecodeError, AttributeError) as error:
-            logger.warning("Skipping malformed message in stats: %s", str(error))
-            continue
-
-        if data.get("type") == "air_quality":
-            air_quality_count += 1
-        elif data.get("type") == "traffic_flow":
-            traffic_flow_count += 1
-
-    stats = {
-        "num_air_quality_events": air_quality_count,
-        "num_traffic_flow_events": traffic_flow_count
-    }
-
-    logger.info("Returning event stats: %s", stats)
-    return jsonify(stats), 200
 
 def get_all_air_ids():
     """Get all air quality id and trace_id from Kafka."""
-    consumer = topic.get_simple_consumer(
-        reset_offset_on_start=True,
-        consumer_timeout_ms=KAFKA_TIMEOUT_MS
-    )
-
-    results = []
-    for msg in consumer:
-        if msg is None:
-            break
-        try:
-            data = json.loads(msg.value.decode("utf-8"))
-            if data.get("type") == "air_quality":
-                payload = data["payload"]
+    try:
+        messages = get_kafka_messages()
+        
+        results = []
+        for msg in messages:
+            if msg.get("type") == "air_quality":
+                payload = msg["payload"]
                 results.append({
                     "event_id": payload.get("sensor_id"),  
                     "trace_id": payload.get("trace_id")
                 })
-        except Exception as e:
-            logger.warning("Skipping message: %s", str(e))
-            continue
-
-    return results, 200
+        
+        return results, 200
+    
+    except Exception as e:
+        logger.error("Error retrieving air quality IDs: %s", str(e))
+        return {"message": f"Error retrieving air quality IDs: {str(e)}"}, 500
 
 
 def get_all_traffic_ids():
     """Get all traffic flow id and trace_id from Kafka."""
-    consumer = topic.get_simple_consumer(
-        reset_offset_on_start=True,
-        consumer_timeout_ms=KAFKA_TIMEOUT_MS
-    )
-
-    results = []
-    for msg in consumer:
-        if msg is None:
-            break
-        try:
-            data = json.loads(msg.value.decode("utf-8"))
-            if data.get("type") == "traffic_flow":
-                payload = data["payload"]
+    try:
+        messages = get_kafka_messages()
+        
+        results = []
+        for msg in messages:
+            if msg.get("type") == "traffic_flow":
+                payload = msg["payload"]
                 results.append({
                     "event_id": payload.get("road_id"),  
                     "trace_id": payload.get("trace_id")
                 })
-        except Exception as e:
-            logger.warning("Skipping message: %s", str(e))
-            continue
+        
+        return results, 200
+    
+    except Exception as e:
+        logger.error("Error retrieving traffic flow IDs: %s", str(e))
+        return {"message": f"Error retrieving traffic flow IDs: {str(e)}"}, 500
 
-    return results, 200
 
 # Setup Connexion app
 app = connexion.FlaskApp(__name__, specification_dir="")

@@ -12,6 +12,7 @@ import yaml
 from pykafka import KafkaClient
 from pykafka.common import OffsetType
 from sqlalchemy import select
+from kafka_wrapper.kafka_client import KafkaWrapper
 
 from models import SessionLocal, AirQualityEvent, TrafficFlowEvent, init_db  # Import models
 
@@ -133,28 +134,25 @@ def process_messages():
     logger.info("Starting Kafka consumer thread...")
 
     try:
-        client = KafkaClient(hosts=KAFKA_HOST)
-        topic = client.topics[str.encode(TOPIC_NAME)]
-        consumer = topic.get_simple_consumer(
-            consumer_group=b'event_group',
-            reset_offset_on_start=False,
-            auto_offset_reset=OffsetType.LATEST
-        )
-
-        for message in consumer:
+        # Use the configuration variables instead of hardcoded values
+        kafka_wrapper = KafkaWrapper(KAFKA_HOST, TOPIC_NAME)
+        
+        # Use the messages() method to get the message iterator
+        for message in kafka_wrapper.messages():
             try:
                 message_str = message.value.decode('utf-8')
-                message = json.loads(message_str)
-                logger.info("Message: %s", message)
+                message_data = json.loads(message_str)
+                logger.info("Message: %s", message_data)
 
-                payload = message["payload"]
+                payload = message_data["payload"]
 
-                if message["type"] == "air_quality":
+                if message_data["type"] == "air_quality":
                     store_air_quality_event(payload)
-                elif message["type"] == "traffic_flow":
+                elif message_data["type"] == "traffic_flow":
                     store_traffic_flow_event(payload)
-
-                consumer.commit_offsets()
+                
+                # Access the consumer directly
+                kafka_wrapper.consumer.commit_offsets()
 
             except Exception as error:
                 logger.error("Error processing Kafka message: %s", str(error), exc_info=True)

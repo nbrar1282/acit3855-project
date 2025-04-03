@@ -86,6 +86,7 @@ services:
     volumes:
       - ./config/storage:/app/config
       - ./logs:/app/logs
+      - ./kafka_wrapper:/app/kafka_wrapper
     # ports:
     #   - "8090:8090"
     depends_on:
@@ -113,6 +114,7 @@ services:
       - ./config/processing:/app/config
       - ./logs:/app/logs
       - ./data/processing:/app/data
+      - ./kafka_wrapper:/app/kafka_wrapper
     depends_on:
       - storage
     networks:
@@ -132,6 +134,7 @@ services:
     volumes:
       - ./config/analyzer:/app/config
       - ./logs:/app/logs
+      - ./kafka_wrapper:/app/kafka_wrapper
     depends_on:
       kafka:
         condition: service_healthy
