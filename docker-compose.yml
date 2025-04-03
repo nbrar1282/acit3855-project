@@ -70,7 +70,6 @@ services:
     volumes:
       - ./config/receiver:/app/config
       - ./logs:/app/logs
-      - ../kafka_wrapper:/app/kafka_wrapper
     depends_on:
       - kafka
     networks:

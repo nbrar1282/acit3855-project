@@ -11,8 +11,6 @@ import yaml
 from connexion import NoContent
 from pykafka import KafkaClient
 
-from kafka_wrapper.kafka_client import KafkaWrapper
-
 # Use UTC timestamps in logs
 logging.Formatter.converter = time.gmtime
 
@@ -31,10 +29,9 @@ KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}
 TOPIC_NAME = app_config['events']['topic']
 
 # Kafka setup
-# client = KafkaClient(hosts=KAFKA_HOST)
-# topic = client.topics[str.encode(TOPIC_NAME)]
-# producer = topic.get_sync_producer()
-kafka = KafkaWrapper(KAFKA_HOST, TOPIC_NAME)
+client = KafkaClient(hosts=KAFKA_HOST)
+topic = client.topics[str.encode(TOPIC_NAME)]
+producer = topic.get_sync_producer()
 
 # Extract event store URLs
 AIR_QUALITY_URL = app_config["events"]["air"]["url"]
@@ -68,7 +65,7 @@ def log_air_quality_event(body):
             "datetime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "payload": body
         }
-        kafka.send(json.dumps(msg))
+        producer.produce(json.dumps(msg).encode("utf-8"))
         logger.info("Produced air_quality event to Kafka (trace_id: %s)", body["trace_id"])
     except Exception as error:
         logger.error("Failed to send air_quality event to Kafka: %s", str(error))
@@ -90,7 +87,7 @@ def log_traffic_flow_event(body):
             "datetime": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "payload": body
         }
-        kafka.send(json.dumps(msg))
+        producer.produce(json.dumps(msg).encode("utf-8"))
         logger.info("Produced traffic_flow event to Kafka (trace_id: %s)", body["trace_id"])
     except Exception as error:
         logger.error("Failed to send traffic_flow event to Kafka: %s", str(error))
