@@ -32,6 +32,8 @@ with open('./config/app_conf.yml', "r", encoding="utf-8") as f:
 # Kafka configuration
 KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
 TOPIC_NAME = app_config['events']['topic']
+kafka_wrapper = KafkaWrapper(KAFKA_HOST, TOPIC_NAME)
+
 
 # Initialize DB
 init_db()
@@ -118,14 +120,13 @@ def store_traffic_flow_event(payload):
 def process_messages():
     logger.info("Starting Kafka consumer thread...")
     try:
-        kafka_wrapper = KafkaWrapper(KAFKA_HOST, TOPIC_NAME)
         for message in kafka_wrapper.messages():
             try:
-                message_str = message.value.decode('utf-8')
+                message_str = message.value.decode("utf-8")
                 message_data = json.loads(message_str)
-                logger.info("Message: %s", message_data)
+                logger.info("Kafka message received: %s", message_data)
 
-                payload = message_data["payload"]
+                payload = message_data.get("payload")
                 msg_type = message_data.get("type")
 
                 if msg_type == "air_quality":
@@ -133,15 +134,14 @@ def process_messages():
                 elif msg_type == "traffic_flow":
                     store_traffic_flow_event(payload)
                 else:
-                    logger.warning("Unknown message type: %s", msg_type)
+                    logger.warning(f"Unknown message type: {msg_type}")
 
                 if kafka_wrapper.consumer:
                     kafka_wrapper.consumer.commit_offsets()
-
-            except Exception as error:
-                logger.error("Error processing Kafka message: %s", str(error), exc_info=True)
-    except Exception as error:
-        logger.critical("Critical Kafka error: %s", str(error), exc_info=True)
+            except Exception as e:
+                logger.error("Message handling error: %s", str(e), exc_info=True)
+    except Exception as e:
+        logger.critical("Kafka consumer crashed: %s", str(e), exc_info=True)
 
 
 def setup_kafka_thread():

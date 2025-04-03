@@ -34,7 +34,7 @@ with open("./config/app_conf.yml", "r", encoding="utf-8") as config_file:
 # Kafka connection
 KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
 TOPIC_NAME = app_config['events']['topic']
-kafka_client = KafkaWrapper(KAFKA_HOST, TOPIC_NAME)
+kafka_client = KafkaWrapper(KAFKA_HOST, TOPIC_NAME, consume_from_start=True)
 
 
 def get_event_by_index(event_type: str, index: int) -> Tuple[dict, int]:
