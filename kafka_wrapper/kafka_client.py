@@ -57,7 +57,8 @@ class KafkaWrapper:
             topic = self.client.topics[self.topic]
             self.consumer = topic.get_simple_consumer(
                 reset_offset_on_start=self.consume_from_start,
-                auto_offset_reset=OffsetType.EARLIEST if self.consume_from_start else OffsetType.LATEST
+                auto_offset_reset=OffsetType.EARLIEST if self.consume_from_start else OffsetType.LATEST,
+                consumer_timeout_ms=1000  # Add this line
             )
             return True
         except KafkaException as e:
