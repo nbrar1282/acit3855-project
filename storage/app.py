@@ -32,7 +32,7 @@ with open('./config/app_conf.yml', "r", encoding="utf-8") as f:
 # Kafka configuration
 KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
 TOPIC_NAME = app_config['events']['topic']
-kafka_wrapper = KafkaWrapper(KAFKA_HOST, TOPIC_NAME)
+
 
 
 # Initialize DB
@@ -119,6 +119,7 @@ def store_traffic_flow_event(payload):
 
 def process_messages():
     logger.info("Starting Kafka consumer thread...")
+    kafka_wrapper = KafkaWrapper(KAFKA_HOST, TOPIC_NAME)
     try:
         for message in kafka_wrapper.messages():
             try:
