@@ -11,7 +11,7 @@ logger = logging.getLogger("basicLogger")
 
 
 class KafkaWrapper:
-    def __init__(self, hostname, topic):
+    def __init__(self, hostname, topic, consume_from_start=False):
         self.hostname = hostname
         self.topic = topic.encode() if isinstance(topic, str) else topic
         self.consume_from_start = consume_from_start
