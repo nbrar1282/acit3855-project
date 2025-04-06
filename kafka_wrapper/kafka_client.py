@@ -39,7 +39,7 @@ class KafkaWrapper:
         if self.client is not None:
             return True
         try:
-            self.client = KafkaClient(hosts=self.hostname)
+            self.client = KafkaClient(hosts=self.hostname, use_greenlets=False)
             logger.info("Kafka client created!")
             return True
         except KafkaException as e:
