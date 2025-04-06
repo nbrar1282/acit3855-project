@@ -72,7 +72,8 @@ services:
       - ./logs:/app/logs
       - ./kafka_wrapper:/app/kafka_wrapper
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - app-network
     restart: always
