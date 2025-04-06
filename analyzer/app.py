@@ -1,4 +1,4 @@
-# analyzer/app.py
+"""Analyzer Service — Reads Kafka events and exposes APIs for event inspection and stats."""
 
 import os
 import json
@@ -13,11 +13,12 @@ from flask import jsonify
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
 
-from kafka_wrapper.kafka_client import KafkaWrapper
+from kafka_wrapper.kafka_client import KafkaWrapper  # <-- New import
 
 # Use UTC timestamps in logs
 logging.Formatter.converter = time.gmtime
 
+# Constants
 KAFKA_TIMEOUT_MS = 1000  # Kafka consumer timeout
 
 # Load logging configuration
@@ -34,12 +35,18 @@ with open("./config/app_conf.yml", "r", encoding="utf-8") as config_file:
 # Kafka connection
 KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
 TOPIC_NAME = app_config['events']['topic']
-kafka_client = KafkaWrapper(KAFKA_HOST, TOPIC_NAME, consume_from_start=True)
+
+# Use KafkaWrapper
+kafka_wrapper = KafkaWrapper(hostname=KAFKA_HOST, topic=TOPIC_NAME, consume_from_start=True)
 
 
 def get_event_by_index(event_type: str, index: int) -> Tuple[dict, int]:
+    """Retrieve a specific event by index for a given event type."""
     counter = 0
-    for msg in kafka_client.messages():
+
+    for msg in kafka_wrapper.messages():
+        if msg is None:
+            break
         try:
             data = json.loads(msg.value.decode("utf-8"))
         except (json.JSONDecodeError, AttributeError) as error:
@@ -57,56 +64,49 @@ def get_event_by_index(event_type: str, index: int) -> Tuple[dict, int]:
 
 
 def get_air_quality_event(index: int) -> Tuple[dict, int]:
+    """Handle request to get an air quality event by index."""
     return get_event_by_index("air_quality", index)
 
 
 def get_traffic_flow_event(index: int) -> Tuple[dict, int]:
+    """Handle request to get a traffic flow event by index."""
     return get_event_by_index("traffic_flow", index)
 
 
 def get_event_stats() -> Tuple[Any, int]:
+    """Return count of air quality and traffic flow events currently in Kafka."""
     air_quality_count = 0
     traffic_flow_count = 0
-    timeout = 5  # seconds
-    start_time = time.time()
 
-    try:
-        for msg in kafka_client.messages():
-            if time.time() - start_time > timeout:
-                logger.warning("Timeout reached while reading messages for stats.")
-                break
-            try:
-                data = json.loads(msg.value.decode("utf-8"))
-            except (json.JSONDecodeError, AttributeError) as error:
-                logger.warning("Skipping malformed message in stats: %s", str(error))
-                continue
+    for msg in kafka_wrapper.messages():
+        if msg is None:
+            break
+        try:
+            data = json.loads(msg.value.decode("utf-8"))
+        except (json.JSONDecodeError, AttributeError) as error:
+            logger.warning("Skipping malformed message in stats: %s", str(error))
+            continue
 
-            if data.get("type") == "air_quality":
-                air_quality_count += 1
-            elif data.get("type") == "traffic_flow":
-                traffic_flow_count += 1
+        if data.get("type") == "air_quality":
+            air_quality_count += 1
+        elif data.get("type") == "traffic_flow":
+            traffic_flow_count += 1
 
-        stats = {
-            "num_air_quality_events": air_quality_count,
-            "num_traffic_flow_events": traffic_flow_count
-        }
+    stats = {
+        "num_air_quality_events": air_quality_count,
+        "num_traffic_flow_events": traffic_flow_count
+    }
 
-        logger.info("Returning event stats: %s", stats)
-        return jsonify(stats), 200
-
-    except Exception as e:
-        logger.error("Error in stats endpoint: %s", str(e), exc_info=True)
-        return jsonify({
-            "error": "Internal server error",
-            "num_air_quality_events": 0,
-            "num_traffic_flow_events": 0
-        }), 500
-
+    logger.info("Returning event stats: %s", stats)
+    return jsonify(stats), 200
 
 
 def get_all_air_ids():
+    """Get all air quality id and trace_id from Kafka."""
     results = []
-    for msg in kafka_client.messages():
+    for msg in kafka_wrapper.messages():
+        if msg is None:
+            break
         try:
             data = json.loads(msg.value.decode("utf-8"))
             if data.get("type") == "air_quality":
@@ -123,8 +123,11 @@ def get_all_air_ids():
 
 
 def get_all_traffic_ids():
+    """Get all traffic flow id and trace_id from Kafka."""
     results = []
-    for msg in kafka_client.messages():
+    for msg in kafka_wrapper.messages():
+        if msg is None:
+            break
         try:
             data = json.loads(msg.value.decode("utf-8"))
             if data.get("type") == "traffic_flow":
@@ -138,7 +141,6 @@ def get_all_traffic_ids():
             continue
 
     return results, 200
-
 
 # Setup Connexion app
 app = connexion.FlaskApp(__name__, specification_dir="")
