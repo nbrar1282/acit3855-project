@@ -67,30 +67,41 @@ def get_traffic_flow_event(index: int) -> Tuple[dict, int]:
 def get_event_stats() -> Tuple[Any, int]:
     air_quality_count = 0
     traffic_flow_count = 0
-    max_messages = 10000  # Safe cap to prevent overload
+    timeout = 5  # seconds
+    start_time = time.time()
 
-    for i, msg in enumerate(kafka_client.messages()):
-        if i >= max_messages:
-            logger.warning("Max message limit reached in stats endpoint.")
-            break
-        try:
-            data = json.loads(msg.value.decode("utf-8"))
-        except (json.JSONDecodeError, AttributeError) as error:
-            logger.warning("Skipping malformed message in stats: %s", str(error))
-            continue
+    try:
+        for msg in kafka_client.messages():
+            if time.time() - start_time > timeout:
+                logger.warning("Timeout reached while reading messages for stats.")
+                break
+            try:
+                data = json.loads(msg.value.decode("utf-8"))
+            except (json.JSONDecodeError, AttributeError) as error:
+                logger.warning("Skipping malformed message in stats: %s", str(error))
+                continue
 
-        if data.get("type") == "air_quality":
-            air_quality_count += 1
-        elif data.get("type") == "traffic_flow":
-            traffic_flow_count += 1
+            if data.get("type") == "air_quality":
+                air_quality_count += 1
+            elif data.get("type") == "traffic_flow":
+                traffic_flow_count += 1
 
-    stats = {
-        "num_air_quality_events": air_quality_count,
-        "num_traffic_flow_events": traffic_flow_count
-    }
+        stats = {
+            "num_air_quality_events": air_quality_count,
+            "num_traffic_flow_events": traffic_flow_count
+        }
 
-    logger.info("Returning event stats: %s", stats)
-    return jsonify(stats), 200
+        logger.info("Returning event stats: %s", stats)
+        return jsonify(stats), 200
+
+    except Exception as e:
+        logger.error("Error in stats endpoint: %s", str(e), exc_info=True)
+        return jsonify({
+            "error": "Internal server error",
+            "num_air_quality_events": 0,
+            "num_traffic_flow_events": 0
+        }), 500
+
 
 
 def get_all_air_ids():
