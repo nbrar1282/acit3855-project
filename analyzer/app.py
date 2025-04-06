@@ -67,8 +67,12 @@ def get_traffic_flow_event(index: int) -> Tuple[dict, int]:
 def get_event_stats() -> Tuple[Any, int]:
     air_quality_count = 0
     traffic_flow_count = 0
+    max_messages = 10000  # Safe cap to prevent overload
 
-    for msg in kafka_client.messages():
+    for i, msg in enumerate(kafka_client.messages()):
+        if i >= max_messages:
+            logger.warning("Max message limit reached in stats endpoint.")
+            break
         try:
             data = json.loads(msg.value.decode("utf-8"))
         except (json.JSONDecodeError, AttributeError) as error:
