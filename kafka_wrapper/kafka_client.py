@@ -6,6 +6,7 @@ import logging
 from pykafka import KafkaClient
 from pykafka.common import OffsetType
 from pykafka.exceptions import KafkaException
+from pykafka.exceptions import KafkaException, LeaderNotFoundError
 
 logger = logging.getLogger("basicLogger")
 
@@ -50,6 +51,7 @@ class KafkaWrapper:
             self.producer = None
             return False
 
+
     def make_consumer(self):
         """Runs once, makes a consumer and sets it on the instance."""
         if self.consumer is not None:
@@ -61,15 +63,16 @@ class KafkaWrapper:
             self.consumer = topic.get_simple_consumer(
                 reset_offset_on_start=self.consume_from_start,
                 auto_offset_reset=OffsetType.EARLIEST if self.consume_from_start else OffsetType.LATEST,
-                consumer_timeout_ms=1000  # Add this line
+                consumer_timeout_ms=1000
             )
+            logger.info("Kafka consumer created.")
             return True
-        except KafkaException as e:
-            msg = f"Make error when making consumer: {e}"
-            logger.warning(msg)
-            self.client = None
+        except (KafkaException, LeaderNotFoundError) as e:
+            logger.warning(f"Kafka consumer creation failed: {e}")
             self.consumer = None
+            # Only reset client if you know it's corrupt; usually not needed here
             return False
+
 
     def make_producer(self):
         """Optional: create a producer (used in receiver service)."""
