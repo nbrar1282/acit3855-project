@@ -88,22 +88,22 @@ class KafkaWrapper:
         """Send message to Kafka topic, retrying indefinitely until successful."""
         while True:
             try:
-                if self.producer is None:
-                    logger.warning("Kafka producer is None, attempting to reconnect...")
+                if self.producer is None or self.client is None:
+                    logger.warning("Kafka producer/client is None, attempting reconnect...")
                     self.connect()
 
-                if self.producer is None:
-                    raise KafkaException("Kafka producer is still None after reconnect")
+                # Ensure the client is actually connected
+                if self.client is None or not self.client.brokers:
+                    raise KafkaException("Kafka client has no brokers. Waiting...")
 
                 self.producer.produce(message.encode("utf-8"))
                 logger.debug("Kafka message sent successfully.")
-                return  # Exit loop on success
+                return  # Exit on success
 
             except KafkaException as e:
                 logger.warning(f"Kafka send failed: {e}. Retrying...")
                 self.producer = None
-                time.sleep(random.uniform(0.5, 1.5))  # random backoff for safety
-
+                time.sleep(random.uniform(0.5, 1.5))
 
     def messages(self):
         """Generator method that catches exceptions in the consumer loop"""
