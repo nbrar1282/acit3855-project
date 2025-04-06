@@ -10,10 +10,9 @@ from typing import Tuple, Any
 import connexion
 import yaml
 from flask import jsonify
+from pykafka import KafkaClient
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
-
-from kafka_wrapper.kafka_client import KafkaWrapper  # <-- New import
 
 # Use UTC timestamps in logs
 logging.Formatter.converter = time.gmtime
@@ -35,16 +34,19 @@ with open("./config/app_conf.yml", "r", encoding="utf-8") as config_file:
 # Kafka connection
 KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
 TOPIC_NAME = app_config['events']['topic']
-
-# Use KafkaWrapper
-kafka_wrapper = KafkaWrapper(hostname=KAFKA_HOST, topic=TOPIC_NAME, consume_from_start=True)
+client = KafkaClient(hosts=KAFKA_HOST)
+topic = client.topics[str.encode(TOPIC_NAME)]
 
 
 def get_event_by_index(event_type: str, index: int) -> Tuple[dict, int]:
     """Retrieve a specific event by index for a given event type."""
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True,
+        consumer_timeout_ms=KAFKA_TIMEOUT_MS
+    )
     counter = 0
 
-    for msg in kafka_wrapper.messages():
+    for msg in consumer:
         if msg is None:
             break
         try:
@@ -75,10 +77,15 @@ def get_traffic_flow_event(index: int) -> Tuple[dict, int]:
 
 def get_event_stats() -> Tuple[Any, int]:
     """Return count of air quality and traffic flow events currently in Kafka."""
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True,
+        consumer_timeout_ms=KAFKA_TIMEOUT_MS
+    )
+
     air_quality_count = 0
     traffic_flow_count = 0
 
-    for msg in kafka_wrapper.messages():
+    for msg in consumer:
         if msg is None:
             break
         try:
@@ -100,11 +107,15 @@ def get_event_stats() -> Tuple[Any, int]:
     logger.info("Returning event stats: %s", stats)
     return jsonify(stats), 200
 
-
 def get_all_air_ids():
     """Get all air quality id and trace_id from Kafka."""
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True,
+        consumer_timeout_ms=KAFKA_TIMEOUT_MS
+    )
+
     results = []
-    for msg in kafka_wrapper.messages():
+    for msg in consumer:
         if msg is None:
             break
         try:
@@ -112,7 +123,7 @@ def get_all_air_ids():
             if data.get("type") == "air_quality":
                 payload = data["payload"]
                 results.append({
-                    "event_id": payload.get("sensor_id"),
+                    "event_id": payload.get("sensor_id"),  
                     "trace_id": payload.get("trace_id")
                 })
         except Exception as e:
@@ -124,8 +135,13 @@ def get_all_air_ids():
 
 def get_all_traffic_ids():
     """Get all traffic flow id and trace_id from Kafka."""
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True,
+        consumer_timeout_ms=KAFKA_TIMEOUT_MS
+    )
+
     results = []
-    for msg in kafka_wrapper.messages():
+    for msg in consumer:
         if msg is None:
             break
         try:
@@ -133,7 +149,7 @@ def get_all_traffic_ids():
             if data.get("type") == "traffic_flow":
                 payload = data["payload"]
                 results.append({
-                    "event_id": payload.get("road_id"),
+                    "event_id": payload.get("road_id"),  
                     "trace_id": payload.get("trace_id")
                 })
         except Exception as e:
@@ -152,7 +168,7 @@ if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
         position=MiddlewarePosition.BEFORE_EXCEPTION,
         allow_origins=["*"],
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["*"],    
         allow_headers=["*"],
     )
 
