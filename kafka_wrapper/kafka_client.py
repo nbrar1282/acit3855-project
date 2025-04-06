@@ -22,6 +22,9 @@ class KafkaWrapper:
 
     def connect(self):
         """Infinite loop: will keep trying"""
+        self.client = None
+        self.consumer = None
+        self.producer = None
         while True:
             logger.debug("Trying to connect to Kafka...")
             if self.make_client():
