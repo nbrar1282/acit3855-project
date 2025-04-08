@@ -12,7 +12,7 @@ services:
     image: wurstmeister/kafka
     container_name: kafka
     command: >
-      sh -c "rm -rf /kafka/kafka-logs/meta.properties &&  start-kafka.sh"
+      sh -c "start-kafka.sh"
     # ports: deleting the meta.properties in log folder.
     #   - "9092:9092"
     environment:
