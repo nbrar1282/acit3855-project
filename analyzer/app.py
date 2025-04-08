@@ -13,7 +13,7 @@ from flask import jsonify
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
 
-from kafka_wrapper.kafka_client import KafkaWrapper  # ✅ using your Kafka wrapper
+from kafka_wrapper.kafka_client import KafkaWrapper  
 
 # Use UTC timestamps in logs
 logging.Formatter.converter = time.gmtime

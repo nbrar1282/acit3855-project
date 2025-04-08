@@ -62,9 +62,8 @@ class KafkaWrapper:
             topic = self.client.topics[self.topic]
             self.consumer = topic.get_simple_consumer(
                 consumer_group=b'event_group',
-                reset_offset_on_start=self.consume_from_start,
-                auto_offset_reset=OffsetType.EARLIEST if self.consume_from_start else OffsetType.LATEST,
-                consumer_timeout_ms=1000
+                reset_offset_on_start=False,
+                auto_offset_reset=OffsetType.LATEST
             )
             logger.info("Kafka consumer created.")
             return True
