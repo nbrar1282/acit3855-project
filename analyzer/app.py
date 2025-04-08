@@ -40,7 +40,7 @@ kafka = KafkaWrapper(KAFKA_HOST, TOPIC_NAME, consume_from_start=True, use_consum
 # ========== HANDLERS ==========
 
 def get_event_by_index(event_type: str, index: int) -> Tuple[dict, int]:
-    consumer = kafka.consumer
+    consumer = kafka.get_fresh_consumer()
     counter = 0
 
     for msg in consumer:
@@ -71,7 +71,7 @@ def get_traffic_flow_event(index: int) -> Tuple[dict, int]:
 
 
 def get_event_stats() -> Tuple[Any, int]:
-    consumer = kafka.consumer
+    consumer = kafka.get_fresh_consumer()
     air_quality_count = 0
     traffic_flow_count = 0
 
@@ -99,7 +99,7 @@ def get_event_stats() -> Tuple[Any, int]:
 
 
 def get_all_air_ids():
-    consumer = kafka.consumer
+    consumer = kafka.get_fresh_consumer()
     results = []
 
     for msg in consumer:
@@ -121,7 +121,7 @@ def get_all_air_ids():
 
 
 def get_all_traffic_ids():
-    consumer = kafka.consumer
+    consumer = kafka.get_fresh_consumer()
     results = []
 
     for msg in consumer:

@@ -128,3 +128,15 @@ class KafkaWrapper:
     def commit(self):
         if self.consumer:
          self.consumer.commit_offsets()
+
+    def get_fresh_consumer(self):
+        """Returns a new consumer instance for full reads (e.g. in analyzer)."""
+        topic = self.client.topics[self.topic]
+        return topic.get_simple_consumer(
+            consumer_group=None,
+            reset_offset_on_start=True,
+            auto_offset_reset=OffsetType.EARLIEST,
+            consumer_timeout_ms=1000
+        )
+
+
