@@ -122,3 +122,7 @@ class KafkaWrapper:
                 self.client = None
                 self.consumer = None
                 self.connect()
+    
+    def commit(self):
+        if self.consumer:
+         self.consumer.commit_offsets()

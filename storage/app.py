@@ -136,9 +136,9 @@ def process_messages():
                     store_traffic_flow_event(payload)
                 else:
                     logger.warning(f"Unknown message type: {msg_type}")
+                    
+                kafka_wrapper.commit()
 
-                if kafka_wrapper.consumer:
-                    kafka_wrapper.consumer.commit_offsets()
             except Exception as e:
                 logger.error("Message handling error: %s", str(e), exc_info=True)
     except Exception as e:
