@@ -129,14 +129,25 @@ class KafkaWrapper:
         if self.consumer:
          self.consumer.commit_offsets()
 
-    def get_fresh_consumer(self):
-        """Returns a new consumer instance for full reads (e.g. in analyzer)."""
-        topic = self.client.topics[self.topic]
-        return topic.get_simple_consumer(
-            consumer_group=None,
-            reset_offset_on_start=True,
-            auto_offset_reset=OffsetType.EARLIEST,
-            consumer_timeout_ms=1000
-        )
+    def get_fresh_consumer(self, max_retries=100000000, delay=1):
+        """Returns a new consumer instance for full reads (e.g. in analyzer). Retries if Kafka is not ready."""
+        attempt = 0
+        while attempt < max_retries:
+            try:
+                topic = self.client.topics[self.topic]
+                return topic.get_simple_consumer(
+                    consumer_group=None,
+                    reset_offset_on_start=True,
+                    auto_offset_reset=OffsetType.EARLIEST,
+                    consumer_timeout_ms=1000
+                )
+            except Exception as e:
+                logger.warning(f"Retrying get_fresh_consumer (attempt {attempt + 1}/{max_retries}): {e}")
+                attempt += 1
+                time.sleep(delay)
+        
+        logger.error("Failed to get fresh consumer after retries.")
+        raise RuntimeError("Could not get Kafka consumer after retrying.")
+
 
 
