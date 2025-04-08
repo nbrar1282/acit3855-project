@@ -12,7 +12,7 @@ services:
     image: wurstmeister/kafka
     container_name: kafka
     command: >
-      sh -c "start-kafka.sh"
+      sh -c "if [ ! -f /kafka/kafka-logs/meta.properties ]; then echo 'Cleaning first-time metadata'; rm -rf /kafka/kafka-logs/meta.properties; fi && start-kafka.sh"
     # ports: deleting the meta.properties in log folder.
     #   - "9092:9092"
     environment:
