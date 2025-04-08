@@ -35,7 +35,7 @@ with open("./config/app_conf.yml", "r", encoding="utf-8") as config_file:
 # Kafka connection (wrapped)
 KAFKA_HOST = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
 TOPIC_NAME = app_config['events']['topic']
-kafka = KafkaWrapper(KAFKA_HOST, TOPIC_NAME, consume_from_start=True)
+kafka = KafkaWrapper(KAFKA_HOST, TOPIC_NAME, consume_from_start=True, use_consumer_group=False)
 
 # ========== HANDLERS ==========
 

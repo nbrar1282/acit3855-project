@@ -12,10 +12,11 @@ logger = logging.getLogger("basicLogger")
 
 
 class KafkaWrapper:
-    def __init__(self, hostname, topic, consume_from_start=False):
+    def __init__(self, hostname, topic, consume_from_start=False, use_consumer_group=True):
         self.hostname = hostname
         self.topic = topic.encode() if isinstance(topic, str) else topic
         self.consume_from_start = consume_from_start
+        self.use_consumer_group = use_consumer_group  # << NEW
         self.client = None
         self.consumer = None
         self.producer = None
@@ -61,7 +62,7 @@ class KafkaWrapper:
         try:
             topic = self.client.topics[self.topic]
             self.consumer = topic.get_simple_consumer(
-                consumer_group=b'event_group',
+                consumer_group=b'event_group' if self.use_consumer_group else None,
                 reset_offset_on_start=self.consume_from_start,
                 auto_offset_reset=OffsetType.LATEST,
                 consumer_timeout_ms=1000
