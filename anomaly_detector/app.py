@@ -88,6 +88,7 @@ def update_anomalies():
     return {"anomalies_count": len(anomalies)}, 201
 
 
+
 def get_anomalies(event_type=None):
     logger.debug(f"GET /anomalies received. Filter: {event_type}")
 
@@ -108,7 +109,7 @@ def get_anomalies(event_type=None):
     if not anomalies:
         return "", 204
 
-    return anomalies, 200
+    return jsonify(anomalies), 200
 
 
 # Setup Connexion app
