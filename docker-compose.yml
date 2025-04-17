@@ -187,9 +187,6 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-    environment:
-      AIR_QUALITY_INDEX_MAX: 100
-      VEHICLE_COUNT_MIN: 10
     networks:
       - app-network
     restart: always

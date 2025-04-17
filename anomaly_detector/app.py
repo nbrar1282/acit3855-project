@@ -28,9 +28,12 @@ KAFKA_HOST = f"{app_cfg['events']['hostname']}:{app_cfg['events']['port']}"
 TOPIC_NAME = app_cfg['events']['topic']
 DATASTORE_PATH = app_cfg['datastore']['filename']
 
+os.makedirs(os.path.dirname(DATASTORE_PATH), exist_ok=True)
+
+
 # Environment thresholds
-AIR_QUALITY_MAX = int(os.getenv("AIR_QUALITY_MAX", 100))     # can set uo differnt values for our kafka queue based on this 
-VEHICLE_COUNT_MAX = int(os.getenv("VEHICLE_COUNT_MAX", 500)) 
+AIR_QUALITY_MAX = 500     # can set uo differnt values for our kafka queue based on this 
+VEHICLE_COUNT_MAX = 500
 
 logger.info(f"Anomaly Detector started with thresholds — AIR_QUALITY_MAX: {AIR_QUALITY_MAX}, VEHICLE_COUNT_MAX: {VEHICLE_COUNT_MAX}")
 
@@ -109,7 +112,7 @@ def get_anomalies(event_type=None):
     if not anomalies:
         return "", 204
 
-    return jsonify(anomalies), 200
+    return anomalies, 200
 
 
 # Setup Connexion app
