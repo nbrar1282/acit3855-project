@@ -111,7 +111,7 @@ def get_anomalies(event_type=None):
 
 # Setup Connexion app
 app = connexion.FlaskApp(__name__, specification_dir="")
-app.add_api("anomaly.yaml", base_path="/anomaly", strict_validation=True, validate_responses=True)
+app.add_api("anomaly.yaml", base_path="/anomaly_detector", strict_validation=True, validate_responses=True)
 
 if __name__ == "__main__":
     app.run(port=8400, host="0.0.0.0")
