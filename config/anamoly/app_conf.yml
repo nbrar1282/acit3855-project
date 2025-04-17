@@ -1,0 +1,7 @@
+events:
+  hostname: data
+  port: 9092
+  topic: this could be the event
+
+datastore:
+  filename: file location for the stats file

@@ -175,6 +175,24 @@ services:
       networks:
         - app-network
       restart: always
+      
+  anomaly_detector:
+    build:
+      context: ./anomaly_detector
+    volumes:
+      - ./config/anomaly_detector:/app/config
+      - ./data/anomaly_detector:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      AIR_QUALITY_INDEX_MAX: 100
+      VEHICLE_COUNT_MIN: 10
+    networks:
+      - app-network
+    restart: always
+
 
 
 networks:

@@ -4,7 +4,7 @@ info:
   version: "1.0.0"
   title: Anomaly API
   contact:
-    email: student@bcit.ca # CHANGE THIS
+    email: nbrar53@my.bcit.ca # CHANGE THIS
 
 paths:
   /update:
@@ -31,10 +31,10 @@ paths:
       parameters:
         - name: event_type
           in: query
-          description: Filter by event type (EVENT1, EVENT2) - shows all anomalies if not provided
+          description: Filter by event type (AIR, TRAFFIC) - shows all anomalies if not provided
           schema:
             type: string
-            example: EVENT1 # CHANGE THIS
+            example: AIR # CHANGE THIS
       responses:
         '200':
           description: Successfully returned a non-empty list of anomalies of the given event type
@@ -47,7 +47,7 @@ paths:
         '204':
           description: No anomalies found for the given event type
         '400':
-          description: Invalid Event Type, must be EVENT1 or EVENT2 # CHANGE THIS
+          description: Invalid Event Type, must be AIR or TRAFFIC # CHANGE THIS
           content:
             application/json:
               schema:
@@ -69,16 +69,12 @@ components:
   schemas:
     Anomaly:
       required:
-      - id
       - event_id
       - trace_id
       - event_type
       - anomaly_type
       - description
       properties:
-        id:
-          type: integer
-          example: 500000
         event_id:
           type: string
           example: A1234
@@ -87,7 +83,7 @@ components:
           example: A12345
         event_type:
           type: string
-          example: EVENT1
+          example: TRAFFIC
         anomaly_type:
           type: string
           example: Too High
@@ -95,4 +91,5 @@ components:
           type: string
           example: "Detected: 150; too high (threshold 140)"
       type: object
+
 
