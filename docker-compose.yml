@@ -183,6 +183,7 @@ services:
       - ./config/anomaly_detector:/app/config
       - ./data/anomaly_detector:/app/data
       - ./logs:/app/logs
+      - ./kafka_wrapper:/app/kafka_wrapper
     depends_on:
       kafka:
         condition: service_healthy
