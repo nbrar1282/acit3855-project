@@ -96,17 +96,13 @@ def get_anomalies(event_type=None):
     logger.debug(f"GET /anomalies received. Filter: {event_type}")
 
     if not os.path.exists(DATASTORE_PATH):
-        # Create an empty anomalies datastore if it doesn't exist
-        logger.info("Datastore not found. Creating a new one.")
-        with open(DATASTORE_PATH, "w") as f:
-            json.dump([], f)
+        return {"message": "Anomaly datastore not found."}, 404
 
     try:
         with open(DATASTORE_PATH, "r") as f:
             anomalies = json.load(f)
     except Exception:
-        logger.error("Failed to load datastore. Possibly corrupt.")
-        return {"message": "Invalid datastore file."}, 500
+        return {"message": "Invalid datastore file."}, 404
 
     if event_type:
         if event_type not in ["AIR", "TRAFFIC"]:
